@@ -1,0 +1,1 @@
+namespace ParrotShopBackend.Application.Profiles;
