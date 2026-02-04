@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace ParrotShopBackend.Domain;
 
@@ -20,11 +19,11 @@ public class User
     [StringLength(100)]
     public string? Email { get; set; }
     [Required]
-    public required Role role { get; set; }
+    public required Role Role { get; set; }
     [Required]
-    public required long cartId { get; set; }
+    public required long CartId { get; set; }
     [Required]
-    public required Cart cart { get; set; }
+    public required Cart Cart { get; set; }
 
 }
 

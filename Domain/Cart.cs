@@ -14,6 +14,5 @@ public class Cart
     public required long UserId { get; set; }
 
     public required List<CartItem> CartItems { get; set; }
-    public decimal TotalPrice { get; set; }
 }
 
