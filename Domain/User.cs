@@ -21,7 +21,7 @@ public class User
     [Required]
     public required Role Role { get; set; }
     public Cart? Cart { get; set; } //we don't need a cart for user to exist
-    public List<Order> Orders { get; set; }
+    public List<Order> Orders { get; set; } = new();
 
 
 }

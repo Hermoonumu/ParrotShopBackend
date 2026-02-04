@@ -31,7 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             conf.TokenValidationParameters = new TokenValidationParameters()
             {
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
-                builder.Configuration["SecSettings:SecretKey"]
+                builder.Configuration["SecSettings:SecretKey"]!
             )),
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
