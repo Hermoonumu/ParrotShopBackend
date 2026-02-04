@@ -20,10 +20,9 @@ public class User
     public string? Email { get; set; }
     [Required]
     public required Role Role { get; set; }
-    [Required]
-    public required long CartId { get; set; }
-    [Required]
-    public required Cart Cart { get; set; }
+    public Cart? Cart { get; set; } //we don't need a cart for user to exist
+    public List<Order> Orders { get; set; }
+
 
 }
 

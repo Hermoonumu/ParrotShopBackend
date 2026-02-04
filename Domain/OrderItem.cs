@@ -21,4 +21,5 @@ public class OrderItem
     [Column(TypeName = "decimal(18,2)")]
     public required decimal PriceAtOrderTime { get; set; }
     public string? ImageUrl { get; set; }
+    public long? OrderId { get; set; }
 }

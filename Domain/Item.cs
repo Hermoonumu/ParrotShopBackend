@@ -17,8 +17,8 @@ public class Item
     public required decimal Price { get; set; }
     public string? ImageUrl { get; set; }
 
-    public ItemCategory Category { get; set; } //link the category to the item
-    public long CategoryId { get; set; }
+    public ItemCategory? Category { get; set; } //link the category to the item
+    public long? CategoryId { get; set; }
 
 
 
