@@ -11,8 +11,8 @@ public class OrderItem
 {
     [Key]
     public long Id { get; set; }
-    public long LinkedItemId { set; get; }
-    public Item LinkedItem { set; get; }
+    public long? LinkedItemId { set; get; } //Allow to set the og item id to null, since we might stop selling it
+    public Item? LinkedItem { set; get; }
     [Required]
     [StringLength(100)]
     public required string Name { get; set; }
