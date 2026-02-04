@@ -7,7 +7,19 @@ You can buy your own slave parrot right here!
 - Practice C#
 - Get gist of EF and Fluent API
 - Mock Payments
--
+
+## 🚀 Tech Stack
+
+- **Framework:** ASP.NET Core 10 Web API
+- **Database:** PostgreSQL (with Npgsql)
+- **ORM:** Entity Framework Core (Code-First)
+- **Docs:** Scalar
+- **Auth:** JWT (JSON Web Tokens) with Refresh Tokens
+
+## 🤡 Funny Code Dinguses
+
+- **Bit packing:** The colours of a bird are stored as bit flags inside an int
+- **Security:** JWT and password hashing (you may crack the table but frick you)
 
 ## ☑️ What's been achieved?
 
