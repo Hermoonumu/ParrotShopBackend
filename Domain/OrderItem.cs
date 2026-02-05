@@ -15,11 +15,11 @@ public class OrderItem
     public Item? LinkedItem { set; get; }
     [Required]
     [StringLength(100)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
     public string? Description { get; set; }
     [Required]
     [Column(TypeName = "decimal(18,2)")]
-    public required decimal PriceAtOrderTime { get; set; }
+    public decimal PriceAtOrderTime { get; set; }
     public string? ImageUrl { get; set; }
     public long? OrderId { get; set; }
 }

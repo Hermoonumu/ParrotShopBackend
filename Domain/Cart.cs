@@ -7,12 +7,12 @@ public class Cart
 {
     [Key]
     [Required]
-    public required long Id { get; set; }
+    public long Id { get; set; }
     [Required]
-    public required User User { get; set; }
+    public User User { get; set; }
     [Required]
-    public required long UserId { get; set; }
+    public long UserId { get; set; }
 
-    public required List<CartItem> CartItems { get; set; }
+    public List<CartItem> CartItems { get; set; }
 }
 

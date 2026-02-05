@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ParrotShopBackend.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -42,11 +43,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
             conf.Events = new JwtBearerEvents
             {
-                OnTokenValidated = (async context =>
+                OnTokenValidated = async context =>
                 {
                     var db = context.HttpContext.RequestServices.GetRequiredService<ShopContext>();
-                    var jti = context.SecurityToken.Id;
-                })
+                    if (context.SecurityToken is JwtSecurityToken accessToken)
+                    {
+                        var tokenString = accessToken.RawData;
+                        var isRevoked = await db.revokedJWTs.AnyAsync(x => x.Token == tokenString);
+                        if (isRevoked) context.Fail("Token has been revoked.");
+                    }
+                }
             };
         }
     );

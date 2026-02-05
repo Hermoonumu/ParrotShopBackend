@@ -39,6 +39,8 @@ public class ShopContext : DbContext
             i.HasOne(ent => ent.Category)
             .WithMany(cat => cat.Items)
             .OnDelete(DeleteBehavior.Restrict);
+
+            i.HasQueryFilter(ent => !ent.IsDeleted); //Filters all the queries based on whether they're "deleted"
         });
         mBuild.Entity<Cart>(c =>
         {
@@ -52,7 +54,7 @@ public class ShopContext : DbContext
         {
             ci.HasKey(ent => ent.Id);
             ci.HasOne(ent => ent.Item)
-            .WithOne()
+            .WithMany()
             .OnDelete(DeleteBehavior.Cascade); //So I delete the item and the cartitem vanishes.
 
         });

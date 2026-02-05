@@ -11,7 +11,7 @@ public class CartItem
     public long Id { get; set; }
     public long CartId { get; set; }
     public long ItemId { get; set; }
-    public required Item Item { get; set; }
+    public Item Item { get; set; }
 
     [Range(1, 100)]
     public int Qty { get; set; }
