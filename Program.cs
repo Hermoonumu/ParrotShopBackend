@@ -8,6 +8,8 @@ using System.IdentityModel.Tokens.Jwt;
 using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Domain;
 using ParrotShopBackend.Infrastructure.Repos;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -21,7 +23,8 @@ builder.Services.AddControllers()
     });
 builder.Services.AddEndpointsApiExplorer();
 
-
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddDbContext<ShopContext>(option => { option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")); });
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();

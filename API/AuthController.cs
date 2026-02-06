@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using ParrotShopBackend.Application.DTO;
@@ -25,10 +26,12 @@ public class AuthController(IAuthService _authSvc) : ControllerBase
         }
         catch (UserAlreadyExistsException e)
         {
-            return BadRequest(new { e.Message });
+            return Conflict(new { e.Message });
         }
-
-
+        catch
+        {
+            return StatusCode(500, new { Message = "The server went kaboom." });
+        }
     }
 
     [Authorize]

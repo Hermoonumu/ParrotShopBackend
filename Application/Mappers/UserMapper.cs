@@ -11,8 +11,8 @@ public static class UserMapper
     {
         User user = new User()
         {
-            Name = dto.Name == null ? Guid.NewGuid().ToString() : dto.Name,
-            Username = dto.Username == null ? Guid.NewGuid().ToString() : dto.Username,
+            Name = dto.Name ?? string.Empty,
+            Username = dto.Username ?? string.Empty,
             Email = dto.Email,
             Role = Role.User
         };
