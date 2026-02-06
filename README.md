@@ -1,4 +1,4 @@
-# 📮 Parrot Shop with ASP.NET Core Web API
+# 🛍️ Parrot Shop with ASP.NET Core Web API
 
 You can buy your own slave parrot right here!
 

@@ -27,7 +27,11 @@ public class ShopContext : DbContext
         mBuild.Entity<User>(u =>
         {
             u.HasKey(ent => ent.Id);
-            u.HasAlternateKey(ent => ent.Username);
+            u.HasAlternateKey(ent => ent.Username)
+            .HasName("AK_Users_Username");
+            u.HasIndex(ent => ent.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email");
             u.HasOne(ent => ent.Cart)
             .WithOne(crt => crt.User)
             .HasForeignKey<Cart>("UserId")
