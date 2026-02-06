@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using ParrotShopBackend.Domain;
 
@@ -11,5 +12,10 @@ public class UserRepository(ShopContext _db) : IUserRepository
     {
         await _db.Users.AddAsync(user);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<User> GetUserByUsernameAsync(string username)
+    {
+        return await _db.Users.Include(u => u.Cart).Where(u => u.Username == username).FirstAsync();
     }
 }

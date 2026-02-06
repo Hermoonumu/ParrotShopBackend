@@ -29,6 +29,7 @@ builder.Services.AddDbContext<ShopContext>(option => { option.UseNpgsql(builder.
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
@@ -36,7 +37,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             conf.RequireHttpsMetadata = false;
             conf.Audience = builder.Configuration["API:Audience"];
-            conf.Authority = builder.Configuration["API:Authority"];
             conf.SaveToken = true;
             conf.TokenValidationParameters = new TokenValidationParameters()
             {
@@ -45,13 +45,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             )),
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["API:Authority"],
+                ValidateIssuer = true,
+                ValidIssuer = builder.Configuration["API:Issuer"],
                 ValidateAudience = true,
                 ValidAudience = builder.Configuration["API:Audience"],
                 ClockSkew = TimeSpan.FromMinutes(2)
             };
             conf.Events = new JwtBearerEvents
             {
+                OnMessageReceived = async context =>
+                {
+                    context.Token = context.Request.Cookies["accessToken"];
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine($"Auth Failed: {context.Exception.Message}");
+                    return Task.CompletedTask;
+                },
                 OnTokenValidated = async context =>
                 {
                     var db = context.HttpContext.RequestServices.GetRequiredService<ShopContext>();

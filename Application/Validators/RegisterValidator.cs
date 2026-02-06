@@ -1,5 +1,3 @@
-using System;
-using System.Data;
 using FluentValidation;
 using ParrotShopBackend.Application.DTO;
 

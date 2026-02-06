@@ -1,6 +1,12 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Exceptions;
@@ -12,9 +18,9 @@ namespace ParrotShopBackend.Application.Services;
 
 
 
-public class AuthService(IUserService _userSvc, IUserRepository _userRepo) : IAuthService
+public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConfiguration _conf, IRefreshTokenRepository _refreshRepo) : IAuthService
 {
-    public async Task RegisterAsync(RegFormDTO rfDTO)
+    public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO)
     {
         User user = UserMapper.FromRegFormDTO(rfDTO);
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
@@ -41,8 +47,57 @@ public class AuthService(IUserService _userSvc, IUserRepository _userRepo) : IAu
                 }
             }
         }
+        return await GenerateTokensAsync(user);
 
     }
 
+    public ClaimsIdentity CreateClaims(User user)
+    {
+        ClaimsIdentity claims = new();
+        claims.AddClaim(new Claim(ClaimTypes.Name, user.Username!));
+        claims.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()!));
+        claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()!));
+        claims.AddClaim(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+        return claims;
+    }
 
+    public async Task<Dictionary<string, string>> GenerateTokensAsync(User user, bool expired = false)
+    {
+        Dictionary<string, string> tokens = new Dictionary<string, string>();
+        JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+        byte[] key = Encoding.ASCII.GetBytes(_conf["SecSettings:SecretKey"]!);
+        SigningCredentials credentials = new SigningCredentials
+            (
+                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature
+            );
+        SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = CreateClaims(user),
+            Issuer = _conf["API:Issuer"],
+            Audience = _conf["API:Audience"],
+            Expires = DateTime.UtcNow.Add(expired ? TimeSpan.FromSeconds(0) : TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!))),
+            SigningCredentials = credentials
+        };
+        tokens.Add("AccessToken", handler.WriteToken(handler.CreateToken(tokenDescriptor)));
+        byte[] randStringToken = new byte[128];
+        RandomNumberGenerator.Create().GetBytes(randStringToken);
+        tokens.Add("RefreshToken", Convert.ToBase64String(randStringToken)!);
+        await _refreshRepo.AddTokenAsync(new RefreshToken()
+        {
+            UserID = (long)user.Id!,
+            Token = tokens["RefreshToken"],
+            IssuedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow + TimeSpan.FromDays(Int32.Parse(_conf["SecSettings:RefreshDurationDays"]!))
+        });
+        return tokens;
+    }
+
+    public async Task<Dictionary<string, string>> LoginAsync(LoginFormDTO lfDTO)
+    {
+        User user = await _userRepo.GetUserByUsernameAsync(lfDTO.Username!);
+        if (user == null) throw new UserDoesntExistException("There's no such user");
+        if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, lfDTO.Password!)
+        == PasswordVerificationResult.Failed) throw new PasswordCheckFailedException("Password check failed.");
+        return await GenerateTokensAsync(user);
+    }
 }

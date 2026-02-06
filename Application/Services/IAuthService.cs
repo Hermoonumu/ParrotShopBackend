@@ -7,5 +7,6 @@ namespace ParrotShopBackend.Application.Services;
 
 public interface IAuthService
 {
-    public Task RegisterAsync(RegFormDTO rfDTO);
+    public Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO);
+    public Task<Dictionary<string, string>> LoginAsync(LoginFormDTO lfDTO);
 }

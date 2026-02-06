@@ -25,6 +25,7 @@ You can buy your own slave parrot right here!
 
 - Entites are established
 - Set up database connection and migrations
+- Registering
 
 ## 🚲 What's to do?
 
