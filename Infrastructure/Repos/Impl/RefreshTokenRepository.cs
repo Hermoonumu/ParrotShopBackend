@@ -30,5 +30,9 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
         await _db.SaveChangesAsync();
     }
 
-
+    public async Task RemoveTokenAsync(string token)
+    {
+        await _db.RefreshTokens.Where(tk => tk.Token == token).ExecuteDeleteAsync();
+        await _db.SaveChangesAsync();
+    }
 }

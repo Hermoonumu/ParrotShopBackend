@@ -9,9 +9,7 @@ using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Infrastructure.Repos;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using ParrotShopBackend.Domain;
 using ParrotShopBackend.Application.Exceptions;
-using System.Numerics;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,6 +30,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IRevokedJWTRepository, RevokedJWTRepository>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -68,12 +67,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 OnTokenValidated = async context =>
                 {
                     var db = context.HttpContext.RequestServices.GetRequiredService<ShopContext>();
-                    if (context.SecurityToken is JwtSecurityToken accessToken)
-                    {
-                        var tokenString = accessToken.RawData;
-                        var isRevoked = await db.revokedJWTs.AnyAsync(x => x.Token == tokenString);
-                        if (isRevoked) context.Fail("Token has been revoked.");
-                    }
+                    var TokenToCheck = context
+                                            .HttpContext
+                                            .Request
+                                            .Cookies["AccessToken"]
+                                            ?? context
+                                            .HttpContext
+                                            .Request
+                                            .Headers
+                                            .Authorization
+                                            .ToString()
+                                            .Replace("Bearer ", "");
+                    var isRevoked = await db.revokedJWTs.AnyAsync(x => x.Token == TokenToCheck);
+                    if (isRevoked) context.Fail("Token has been revoked.");
                 }
             };
         }

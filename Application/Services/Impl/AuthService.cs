@@ -18,7 +18,11 @@ namespace ParrotShopBackend.Application.Services;
 
 
 
-public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConfiguration _conf, IRefreshTokenRepository _refreshRepo) : IAuthService
+public class AuthService(IUserService _userSvc,
+                            IUserRepository _userRepo,
+                            IConfiguration _conf,
+                            IRefreshTokenRepository _refreshRepo,
+                            IRevokedJWTRepository _revJWTRepo) : IAuthService
 {
     public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO)
     {
@@ -109,12 +113,12 @@ public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConf
     public async Task<Dictionary<string, string>> AttemptRefreshAsync(string refreshToken)
     {
         var hasher = SHA512.Create();
+        var token = Convert.ToBase64String(hasher.ComputeHash(
+                    Encoding.ASCII.GetBytes(refreshToken)));
         User? user = await _refreshRepo
                         .GetUserByRefreshTokenAsync(
-                            Convert.ToBase64String(hasher.ComputeHash(
-                                    Encoding.ASCII.GetBytes(refreshToken)
-                                )));
-        if (user is null) throw new RefreshFailedException("Couldn't refresh the tokens");
+                            token) ?? throw new RefreshFailedException("Couldn't refresh the tokens");
+        await _refreshRepo.RemoveTokenAsync(token);
         return await GenerateTokensAsync(user, true);
     }
 
@@ -124,7 +128,13 @@ public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConf
         var jwtSecurityToken = handler.ReadJwtToken(token);
         var claims = jwtSecurityToken.Claims;
         var UserId = claims.First(claim => claim.Type == "nameid").Value;
-        long.Parse(UserId);
         return await _userSvc.GetUserByIdAsync(long.Parse(UserId));
+    }
+
+    public async Task ClearTokensAsync(string accessToken, string refreshToken)
+    {
+        User? user = await AuthenticateUserAsync(accessToken);
+        await _refreshRepo.RemoveTokenAsync(refreshToken);
+        await _revJWTRepo.AddTokenAsync(new RevokedJWT() { Token = accessToken });
     }
 }

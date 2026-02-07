@@ -91,10 +91,6 @@ public class ShopContext : DbContext
         mBuild.Entity<RevokedJWT>(rjwt =>
         {
             rjwt.HasKey(ent => ent.Token);
-            rjwt.HasOne(ent => ent.User)
-            .WithMany()
-            .OnDelete(DeleteBehavior.Cascade);
-
         });
 
         mBuild.Entity<RefreshToken>(
