@@ -2,6 +2,7 @@ using System.Net.Mail;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using ParrotShopBackend.Domain;
+using System.Text;
 
 namespace ParrotShopBackend.API;
 
@@ -26,6 +27,4 @@ public class TestController : ControllerBase
     {
         return Ok(new { res = (number & 1) == 0 ? "Even" : "Odd", debug = number & 1 });
     }
-
-
 }

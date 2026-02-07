@@ -15,6 +15,14 @@ You can buy your own slave parrot right here!
 - **ORM:** Entity Framework Core (Code-First)
 - **Docs:** Scalar
 - **Auth:** JWT (JSON Web Tokens) with Refresh Tokens
+- **Testing:** XUnit
+- **API:** REST
+- **Architecture:** Clean
+- **Caching:** Redis
+- **RT updates:** SignalR (maybe)
+- **Containerization:** Docker
+
+
 
 ## 🤡 Funny Code Dinguses
 
@@ -26,6 +34,7 @@ You can buy your own slave parrot right here!
 - Entites are established
 - Set up database connection and migrations
 - Registering
+- Logging in (HttpCookie)
 
 ## 🚲 What's to do?
 
@@ -50,6 +59,8 @@ You can buy your own slave parrot right here!
 - MAYBE SignalR (updates to a customer in real time)
 - XUnit so that it doesn't break
 - FluentValidation
+- Docker Containerization
+- Scalar API docs
 
 ## ¿ So ehhh
 

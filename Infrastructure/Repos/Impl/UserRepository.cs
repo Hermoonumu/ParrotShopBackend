@@ -14,8 +14,13 @@ public class UserRepository(ShopContext _db) : IUserRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<User> GetUserByUsernameAsync(string username)
+    public async Task<User?> GetUserByIdAsync(long id)
     {
-        return await _db.Users.Include(u => u.Cart).Where(u => u.Username == username).FirstAsync();
+        return await _db.Users.Include(u => u.Cart).Where(u => u.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<User?> GetUserByUsernameAsync(string username)
+    {
+        return await _db.Users.Include(u => u.Cart).Where(u => u.Username == username).FirstOrDefaultAsync();
     }
 }

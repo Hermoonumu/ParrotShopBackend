@@ -75,17 +75,21 @@ public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConf
             Subject = CreateClaims(user),
             Issuer = _conf["API:Issuer"],
             Audience = _conf["API:Audience"],
+            NotBefore = DateTime.UtcNow,
+            IssuedAt = DateTime.UtcNow,
             Expires = DateTime.UtcNow.Add(expired ? TimeSpan.FromSeconds(0) : TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!))),
             SigningCredentials = credentials
         };
         tokens.Add("AccessToken", handler.WriteToken(handler.CreateToken(tokenDescriptor)));
         byte[] randStringToken = new byte[128];
         RandomNumberGenerator.Create().GetBytes(randStringToken);
-        tokens.Add("RefreshToken", Convert.ToBase64String(randStringToken)!);
+        var plainRefreshToken = Convert.ToBase64String(randStringToken)!;
+        tokens.Add("RefreshToken", plainRefreshToken);
+        var hasher = SHA512.Create();
         await _refreshRepo.AddTokenAsync(new RefreshToken()
         {
             UserID = (long)user.Id!,
-            Token = tokens["RefreshToken"],
+            Token = Convert.ToBase64String(hasher.ComputeHash(Encoding.ASCII.GetBytes(plainRefreshToken))!),
             IssuedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow + TimeSpan.FromDays(Int32.Parse(_conf["SecSettings:RefreshDurationDays"]!))
         });
@@ -94,10 +98,33 @@ public class AuthService(IUserService _userSvc, IUserRepository _userRepo, IConf
 
     public async Task<Dictionary<string, string>> LoginAsync(LoginFormDTO lfDTO)
     {
-        User user = await _userRepo.GetUserByUsernameAsync(lfDTO.Username!);
+        User? user = await _userRepo.GetUserByUsernameAsync(lfDTO.Username!);
         if (user == null) throw new UserDoesntExistException("There's no such user");
         if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, lfDTO.Password!)
         == PasswordVerificationResult.Failed) throw new PasswordCheckFailedException("Password check failed.");
         return await GenerateTokensAsync(user);
+    }
+
+
+    public async Task<Dictionary<string, string>> AttemptRefreshAsync(string refreshToken)
+    {
+        var hasher = SHA512.Create();
+        User? user = await _refreshRepo
+                        .GetUserByRefreshTokenAsync(
+                            Convert.ToBase64String(hasher.ComputeHash(
+                                    Encoding.ASCII.GetBytes(refreshToken)
+                                )));
+        if (user is null) throw new RefreshFailedException("Couldn't refresh the tokens");
+        return await GenerateTokensAsync(user, true);
+    }
+
+    public async Task<User?> AuthenticateUserAsync(string token)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwtSecurityToken = handler.ReadJwtToken(token);
+        var claims = jwtSecurityToken.Claims;
+        var UserId = claims.First(claim => claim.Type == "nameid").Value;
+        long.Parse(UserId);
+        return await _userSvc.GetUserByIdAsync(long.Parse(UserId));
     }
 }

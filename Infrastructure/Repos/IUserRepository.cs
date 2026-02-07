@@ -6,6 +6,7 @@ namespace ParrotShopBackend.Infrastructure.Repos;
 public interface IUserRepository
 {
     public Task AddUserToDBAsync(User user);
-    public Task<User> GetUserByUsernameAsync(string username);
+    Task<User?> GetUserByIdAsync(long id);
+    public Task<User?> GetUserByUsernameAsync(string username);
 
 }

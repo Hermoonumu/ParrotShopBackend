@@ -6,10 +6,12 @@ using ParrotShopBackend.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using ParrotShopBackend.Application.Services;
-using ParrotShopBackend.Domain;
 using ParrotShopBackend.Infrastructure.Repos;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using ParrotShopBackend.Domain;
+using ParrotShopBackend.Application.Exceptions;
+using System.Numerics;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -30,6 +32,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddTransient<GlobalExceptionHandling>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
@@ -55,7 +58,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 OnMessageReceived = async context =>
                 {
-                    context.Token = context.Request.Cookies["accessToken"];
+                    context.Token = context.Request.Cookies["AccessToken"];
                 },
                 OnAuthenticationFailed = context =>
                 {
@@ -79,6 +82,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionHandling>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

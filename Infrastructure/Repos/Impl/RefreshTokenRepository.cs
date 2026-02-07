@@ -1,3 +1,4 @@
+using System.Security.Cryptography.Xml;
 using Microsoft.EntityFrameworkCore;
 using ParrotShopBackend.Domain;
 
@@ -12,9 +13,15 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<List<RefreshToken>> GetAllTokensAsync(User user)
+    public async Task<List<RefreshToken>> GetAllUserTokensAsync(long UserId)
     {
-        return await _db.RefreshTokens.Where(tk => tk.UserID == user.Id).ToListAsync();
+        return await _db.RefreshTokens.Where(tk => tk.UserID == UserId).ToListAsync();
+    }
+
+    public async Task<User?> GetUserByRefreshTokenAsync(string refreshToken)
+    {
+        long userId = await _db.RefreshTokens.Where(tk => tk.Token == refreshToken).Select(tk => tk.UserID).FirstOrDefaultAsync();
+        return await _db.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
     }
 
     public async Task RemoveAllUserTokensAsync(long UserId)
@@ -22,4 +29,6 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
         await _db.RefreshTokens.Where(tk => tk.UserID == UserId).ExecuteDeleteAsync();
         await _db.SaveChangesAsync();
     }
+
+
 }
