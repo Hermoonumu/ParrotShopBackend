@@ -137,4 +137,10 @@ public class AuthService(IUserService _userSvc,
         await _refreshRepo.RemoveTokenAsync(refreshToken);
         await _revJWTRepo.AddTokenAsync(new RevokedJWT() { Token = accessToken });
     }
+
+    public async Task ClearExpiredTokensAsync()
+    {
+        await _revJWTRepo.RemoveAllAsync();
+        await _refreshRepo.ClearExpiredTokensAsync();
+    }
 }

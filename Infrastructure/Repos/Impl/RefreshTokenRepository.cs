@@ -13,6 +13,13 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
         await _db.SaveChangesAsync();
     }
 
+    public async Task ClearExpiredTokensAsync()
+    {
+        await _db.RefreshTokens.Where(tk => tk.ExpiresAt < DateTime.UtcNow).ExecuteDeleteAsync();
+        await _db.SaveChangesAsync();
+
+    }
+
     public async Task<List<RefreshToken>> GetAllUserTokensAsync(long UserId)
     {
         return await _db.RefreshTokens.Where(tk => tk.UserID == UserId).ToListAsync();

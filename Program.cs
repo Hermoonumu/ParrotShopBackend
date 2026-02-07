@@ -4,12 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ParrotShopBackend.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
 using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Infrastructure.Repos;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using ParrotShopBackend.Application.Exceptions;
+using Hangfire;
+using Hangfire.PostgreSql;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,6 +33,14 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IRevokedJWTRepository, RevokedJWTRepository>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
+
+builder.Services.AddHangfire(conf =>
+{
+    conf.UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")!);
+
+});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
@@ -86,6 +95,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     );
 
 
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -115,7 +125,15 @@ app.Use(async (ctx, next) =>
 app.MapControllers();
 
 
-
+using (var scope = app.Services.CreateScope())
+{
+    var _recurringJob = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    _recurringJob.AddOrUpdate<IAuthService>(
+        "jwt-clean",
+        service => service.ClearExpiredTokensAsync(),
+        Cron.Daily
+    );
+}
 
 
 

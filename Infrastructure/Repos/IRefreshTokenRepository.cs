@@ -11,4 +11,6 @@ public interface IRefreshTokenRepository
     public Task<List<RefreshToken>> GetAllUserTokensAsync(long UserId);
     public Task<User?> GetUserByRefreshTokenAsync(string refreshToken);
 
+    public Task ClearExpiredTokensAsync();
+
 }

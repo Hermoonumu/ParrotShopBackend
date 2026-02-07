@@ -11,4 +11,5 @@ public interface IAuthService
     public Task<Dictionary<string, string>> AttemptRefreshAsync(string refreshToken);
     public Task<User?> AuthenticateUserAsync(string token);
     public Task ClearTokensAsync(string accessToken, string refreshToken);
+    public Task ClearExpiredTokensAsync();
 }

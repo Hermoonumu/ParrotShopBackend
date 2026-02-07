@@ -19,10 +19,9 @@ You can buy your own slave parrot right here!
 - **API:** REST
 - **Architecture:** Clean
 - **Caching:** Redis
+- **Automation:** Hangfire
 - **RT updates:** SignalR (maybe)
 - **Containerization:** Docker
-
-
 
 ## 🤡 Funny Code Dinguses
 
@@ -35,10 +34,11 @@ You can buy your own slave parrot right here!
 - Set up database connection and migrations
 - Registering
 - Logging in (HttpCookie)
+- DB Revoked Tokens Table cleanup with Hangfire
 
 ## 🚲 What's to do?
 
-- User accounts (AUTH, managing, roles)
+- User accounts (AUTH, managing, roles) **+**
 - Shopping
   - As admin:
     - Manage store (add/remove prods, edit prods)
@@ -50,7 +50,7 @@ You can buy your own slave parrot right here!
     - Checkout
     - Order tracking
     - Manage the account
-- Some real endpoints
+- Some real endpoints **+**
 - Logging
 - Filtering of the products
 - Mock Payments
@@ -58,9 +58,9 @@ You can buy your own slave parrot right here!
 - Redis caching
 - MAYBE SignalR (updates to a customer in real time)
 - XUnit so that it doesn't break
-- FluentValidation
+- FluentValidation **+**
 - Docker Containerization
-- Scalar API docs
+- Scalar API docs **+**
 
 ## ¿ So ehhh
 

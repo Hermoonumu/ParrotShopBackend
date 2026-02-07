@@ -74,9 +74,10 @@ public class AuthController(IAuthService _authSvc, IUserService _userSvc, IConfi
     {
         await _authSvc.ClearTokensAsync(HttpContext.Request.Cookies["AccessToken"]!,
                                         HttpContext.Request.Cookies["RefreshToken"]!);
-        //await ComposeCookies(HttpContext, [], true);
+        await ComposeCookies(HttpContext, [], true);
         return Ok();
     }
+
 
 
 }
