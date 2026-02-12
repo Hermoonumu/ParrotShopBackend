@@ -10,8 +10,8 @@ public class CategoryController(ICategoryService _catSvc) : ControllerBase
 {
     [Authorize(Policy = "Admin")]
     [HttpPost]
-    public Task<IActionResult> AddCategory()
+    public async Task<IActionResult> AddCategory()
     {
-
+        return Ok();
     }
 }

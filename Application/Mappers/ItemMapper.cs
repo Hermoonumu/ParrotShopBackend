@@ -13,7 +13,7 @@ public class ItemMapper
         {
             Name = iDTO.Name,
             Description = iDTO.Description,
-            Price = iDTO.Price,
+            Price = iDTO.Price??0,
             ImageUrl = iDTO.ImageUrl,
             CategoryId = iDTO.CategoryId,
             IsDeleted = false
