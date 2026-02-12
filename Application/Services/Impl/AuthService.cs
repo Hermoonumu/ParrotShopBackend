@@ -24,9 +24,10 @@ public class AuthService(IUserService _userSvc,
                             IRefreshTokenRepository _refreshRepo,
                             IRevokedJWTRepository _revJWTRepo) : IAuthService
 {
-    public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO)
+    public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO, bool admin = false)
     {
         User user = UserMapper.FromRegFormDTO(rfDTO);
+        if (admin) user.Role = Role.Admin;
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
         user.PasswordHash = passwordHasher.HashPassword(user, rfDTO.Password!);
         try
@@ -142,5 +143,21 @@ public class AuthService(IUserService _userSvc,
     {
         await _revJWTRepo.RemoveAllAsync();
         await _refreshRepo.ClearExpiredTokensAsync();
+    }
+
+
+    public async Task<string[]> GetAdministratorAsync()
+    {
+        User? admin = await _userRepo.CheckIfExists("administrator");
+        if (admin != null) return ["administrator", null];
+        var Password = Guid.NewGuid().ToString();
+        await RegisterAsync(new RegFormDTO()
+        {
+            Name = "Admin",
+            Username = "administrator",
+            Email = "admin@admin.admin",
+            Password = Password
+        }, true);
+        return ["administrator", Password];
     }
 }

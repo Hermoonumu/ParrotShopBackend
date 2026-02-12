@@ -1,4 +1,3 @@
-using System.Security.Cryptography.Xml;
 using Microsoft.EntityFrameworkCore;
 using ParrotShopBackend.Domain;
 
@@ -16,8 +15,6 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
     public async Task ClearExpiredTokensAsync()
     {
         await _db.RefreshTokens.Where(tk => tk.ExpiresAt < DateTime.UtcNow).ExecuteDeleteAsync();
-        await _db.SaveChangesAsync();
-
     }
 
     public async Task<List<RefreshToken>> GetAllUserTokensAsync(long UserId)
@@ -34,12 +31,10 @@ public class RefreshTokenRepository(ShopContext _db) : IRefreshTokenRepository
     public async Task RemoveAllUserTokensAsync(long UserId)
     {
         await _db.RefreshTokens.Where(tk => tk.UserID == UserId).ExecuteDeleteAsync();
-        await _db.SaveChangesAsync();
     }
 
     public async Task RemoveTokenAsync(string token)
     {
         await _db.RefreshTokens.Where(tk => tk.Token == token).ExecuteDeleteAsync();
-        await _db.SaveChangesAsync();
     }
 }

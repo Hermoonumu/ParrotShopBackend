@@ -36,7 +36,7 @@ public class AuthController(IAuthService _authSvc, IUserService _userSvc, IConfi
 
         User? user = await _authSvc.AuthenticateUserAsync(HttpContext.Request.Cookies["AccessToken"]!);
 
-        return Ok(new { Message = $"You are {user!.Name}! Username: {user!.Username}" });
+        return Ok(new { Message = $"You are {user!.Name}! Username: {user!.Username}; Access level: {user!.Role}" });
     }
 
     [HttpPost("refresh")]

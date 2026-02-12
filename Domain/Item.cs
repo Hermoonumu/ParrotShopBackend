@@ -15,6 +15,7 @@ public class Item
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
+    public double Discount { get; set; } = 0;
     public string? ImageUrl { get; set; }
 
     public ItemCategory? Category { get; set; } //link the category to the item
