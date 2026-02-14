@@ -38,12 +38,24 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IRevokedJWTRepository, RevokedJWTRepository>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
+
+builder.Services.AddControllers()
+                .AddNewtonsoftJson();
+
 builder.Services.AddHangfire(conf =>
 {
     conf.UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
         .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
+});
+
+
+
+builder.Services.AddStackExchangeRedisCache(opt =>
+{
+    opt.Configuration=builder.Configuration.GetConnectionString("Redis");
+    opt.InstanceName="ParrotCache_";
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

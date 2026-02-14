@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using ParrotShopBackend.Domain;
 using System.Text;
+using System.Text.Json;
 
 namespace ParrotShopBackend.API;
 
@@ -19,6 +20,17 @@ public class TestController : ControllerBase
         parrot.ColorType = Color.Black | Color.White | Color.Green | Color.Colourful;
 
         return Ok(new { Message = $"The parrot has been successfully checked. {parrot.ColorType}" });
+    }
+
+
+    [HttpGet("DumpMyParrot")]
+    public async Task<IActionResult> DumpMyParrot()
+    {
+        Parrot parrot = new Parrot { Name = "Chum", Price = 100 };
+        string json = JsonSerializer.Serialize(parrot);
+        Object deserialized = JsonSerializer.Deserialize<Object>(json)!;
+
+        return Ok(new {Message="Here's what we have: ", json, deserialized, Type=deserialized is Parrot});
     }
 
 

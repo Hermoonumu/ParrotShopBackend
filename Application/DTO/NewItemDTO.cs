@@ -7,6 +7,4 @@ public class NewItemDTO
     public decimal Price { get; set; }
     public string? ImageUrl { get; set; }
     public long? CategoryId { get; set; }
-
-    public bool IsDeleted { get; set; } = false; //soft delete
 }

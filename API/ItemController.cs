@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Services;
+using ParrotShopBackend.Domain;
 
 namespace ParrotShopBackend.API;
 
@@ -11,16 +13,17 @@ public class ItemController(IItemService _itemSvc) : ControllerBase
 {
     [HttpPost]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> CreateNewItem([FromBody] ItemDTO iDTO)
+    public async Task<IActionResult> CreateNewItem([FromBody] NewItemDTO iDTO)
     {
         await _itemSvc.CreateNewItemAsync(iDTO);
         return Ok();
     }
     [HttpPatch]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> UpdateItem([FromBody] ItemDTO iDTO)
+    public async Task<IActionResult> UpdateItem([FromQuery] long Id, [FromBody] JsonPatchDocument<Item> patchDoc)
     {
-        await _itemSvc.UpdateItemAsync(iDTO);
-        return Ok();
+        bool res = await _itemSvc.UpdateItemAsync(Id, patchDoc);
+        if (res) return Ok();
+        else return BadRequest();
     }
 }

@@ -7,13 +7,13 @@ namespace ParrotShopBackend.Application.Mappers;
 
 public class ItemMapper
 {
-    public static Item FromItemDTO(ItemDTO iDTO)
+    public static Item FromItemDTO(NewItemDTO iDTO)
     {
         return new Item()
         {
             Name = iDTO.Name,
             Description = iDTO.Description,
-            Price = iDTO.Price??0,
+            Price = iDTO.Price,
             ImageUrl = iDTO.ImageUrl,
             CategoryId = iDTO.CategoryId,
             IsDeleted = false

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.JsonPatch;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Mappers;
 using ParrotShopBackend.Domain;
@@ -8,12 +9,11 @@ namespace ParrotShopBackend.Application.Services;
 
 public class ItemService(IItemRepository _itemRepo) : IItemService
 {
-    public async Task CreateNewItemAsync(ItemDTO iDTO)
+    public async Task CreateNewItemAsync(NewItemDTO iDTO)
     {
         Item item = ItemMapper.FromItemDTO(iDTO);
         await _itemRepo.AddAsync(item);
     }
-
 
     public async Task RemoveItemAsync(long Id)
     {
@@ -31,8 +31,17 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         await _itemRepo.SoftDeleteItemAsync(ItemId);
     }
 
-    public async Task UpdateItemAsync(ItemDTO iDTO)
+    public async Task<bool> UpdateItemAsync(long Id, JsonPatchDocument<Item> patchDoc)
     {
-        await _itemRepo.UpdateItemAsync(iDTO);
+        Item? item = await _itemRepo.GetItemByIdAsync(Id);
+        if (item is null) return true;
+        bool hasError = false;
+        patchDoc.ApplyTo(   item,
+                            onError =>
+                            {
+                                hasError = true;
+                            });
+        if (!hasError) {await _itemRepo.UpdateItemAsync(); return true;}
+        else return false;
     }
 }

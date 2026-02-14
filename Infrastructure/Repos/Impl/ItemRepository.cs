@@ -1,4 +1,5 @@
 using System.Reflection.Metadata.Ecma335;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Domain;
@@ -12,6 +13,12 @@ public class ItemRepository(ShopContext _db) : IItemRepository
     {
         await _db.Items.AddAsync(item);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<Item?> GetItemByIdAsync(long Id)
+    {
+        Item? item = await _db.Items.FindAsync(Id);
+        return item;
     }
 
     public async Task RemoveAsync(long Id)
@@ -98,17 +105,8 @@ public class ItemRepository(ShopContext _db) : IItemRepository
         }
     }
 
-    public async Task UpdateItemAsync(ItemDTO item)
+    public async Task UpdateItemAsync()
     {
-        Item? ItmToUpdate = await _db.Items.Where(i => i.Id == item.Id).FirstOrDefaultAsync();
-        if (ItmToUpdate is not null)
-        {
-            ItmToUpdate.Name = item.Name??ItmToUpdate.Name;
-            ItmToUpdate.Description = item.Description??ItmToUpdate.Description;
-            ItmToUpdate.Price = item.Price??ItmToUpdate.Price;
-            ItmToUpdate.ImageUrl = item.ImageUrl??ItmToUpdate.ImageUrl;
-            ItmToUpdate.CategoryId = item.CategoryId??ItmToUpdate.CategoryId;
-        }
-
+        await _db.SaveChangesAsync();
     }
 }
