@@ -39,4 +39,11 @@ public class TestController : ControllerBase
     {
         return Ok(new { res = (number & 1) == 0 ? "Even" : "Odd", debug = number & 1 });
     }
+
+    [HttpGet("AmIATeapot")]
+    public async Task<IActionResult> AmIATeapot()
+    {
+        return StatusCode(418, new { Message = "Yes you are a teapot" });
+
+    }
 }

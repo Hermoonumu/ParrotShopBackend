@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ParrotShopBackend.Domain;
@@ -21,5 +22,13 @@ public class ParrotController : ControllerBase
         parrot.ColorType = AllColours;
 
         return Ok(new {Msg="WOW IT WORKED!", Parrot = parrot, AllColours});
+    }
+
+
+    [Authorize(Policy = "Admin")]
+    [HttpPost("")]
+    public async Task<IActionResult> AddParrot()
+    {
+        return Ok();
     }
 }

@@ -1,7 +1,5 @@
 using Hangfire;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ParrotShopBackend.Infrastructure.Repos;
 
 namespace ParrotShopBackend.API;
 

@@ -17,6 +17,8 @@ public class ShopContext : DbContext
     public DbSet<OrderParrot> OrderParrots { get; set; }
     public DbSet<Parrot> Parrots { get; set; }
     public DbSet<RefreshToken> RefreshTokens { set; get; }
+    public DbSet<ParrotTraits> Traits { set; get; }
+
 
 
     public ShopContext(DbContextOptions options) : base(options) { }
@@ -98,5 +100,18 @@ public class ShopContext : DbContext
                 token.HasKey(tk => tk.Token);
             }
         );
+
+        mBuild.Entity<Parrot>(p =>
+        {
+            p.HasOne(ent => ent.Traits)
+            .WithOne()
+            .HasForeignKey<ParrotTraits>(pt => pt.ParrotId)
+            .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        mBuild.Entity<ParrotTraits>()
+        .HasIndex(pt => pt.ParrotId)
+        .IsUnique();
+
     }
 }

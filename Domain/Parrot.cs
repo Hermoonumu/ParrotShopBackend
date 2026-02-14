@@ -11,6 +11,8 @@ public class Parrot : Item
     public Color ColorType { get; set; }
     public Gender GenderType { get; set; }
     public Species SpeciesType { get; set; }
+    public ParrotTraits? Traits{set;get;}
+    public long? TraitsId{set;get;}
 }
 
 [Flags]
@@ -53,4 +55,9 @@ public enum Species
     Cockatoo = 23,
     Macaw = 24,
     Unknown = 100
+}
+
+public enum Character
+{
+    
 }
