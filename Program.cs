@@ -11,6 +11,9 @@ using FluentValidation.AspNetCore;
 using ParrotShopBackend.Application.Exceptions;
 using Hangfire;
 using Hangfire.PostgreSql;
+using ParrotShopBackend.Application.Extensions;
+using Microsoft.Extensions.Caching.Distributed;
+using ParrotShopBackend.Domain;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -35,12 +38,14 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<IRevokedJWTRepository, RevokedJWTRepository>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
 
 builder.Services.AddControllers()
-                .AddNewtonsoftJson();
+                .AddNewtonsoftJson(opt =>
+                {
+                    opt.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
 
 builder.Services.AddHangfire(conf =>
 {
@@ -89,14 +94,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 },
                 OnTokenValidated = async context =>
                 {
-                    var db = context.HttpContext.RequestServices.GetRequiredService<ShopContext>();
+                    var c = context.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
                     var TokenToCheck = context
-                                    .HttpContext.Request.Cookies["AccessToken"]
-                                    ?? context.HttpContext.Request.Headers.Authorization
-                                            .ToString()
-                                            .Replace("Bearer ", "");
-                    var isRevoked = await db.revokedJWTs.AnyAsync(x => x.Token == TokenToCheck);
-                    if (isRevoked) context.Fail("Token has been revoked.");
+                                            .HttpContext
+                                            .Request
+                                            .Cookies["AccessToken"];
+                    
+                    var isRevoked = await DistributedCacheExtension.
+                                    GetRecordAsync<string>(c, $"Revoked_{TokenToCheck}");
+                    if (!string.IsNullOrEmpty(isRevoked)) 
+                    {
+                        context.Fail("Token has been revoked.");
+                    }
                 }
             };
         }
@@ -156,6 +165,11 @@ using (var scope = app.Services.CreateScope())
     {
         app.Logger.LogInformation($"ADMIN INSTANTIATED\n\nCREDENTIALS:\nUSERNAME: {adminCreds[0]}\nPASSWORD: {adminCreds[1]}\n\n");
     }
+    /*var c = scope.ServiceProvider.GetRequiredService<IDistributedCache>();
+    await DistributedCacheExtension.SetRecordAsync<List<RevokedJWT>>(   c,
+                                                                        "RevokedJWTs", 
+                                                                        new List<RevokedJWT>(), 
+                                                                        TimeSpan.FromDays(365));*/
 }
 
 

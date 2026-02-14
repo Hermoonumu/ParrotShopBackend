@@ -1,11 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using ParrotShopBackend.Application.DTO;
@@ -13,6 +12,7 @@ using ParrotShopBackend.Application.Exceptions;
 using ParrotShopBackend.Application.Mappers;
 using ParrotShopBackend.Domain;
 using ParrotShopBackend.Infrastructure.Repos;
+using ParrotShopBackend.Application.Extensions;
 
 namespace ParrotShopBackend.Application.Services;
 
@@ -22,7 +22,7 @@ public class AuthService(IUserService _userSvc,
                             IUserRepository _userRepo,
                             IConfiguration _conf,
                             IRefreshTokenRepository _refreshRepo,
-                            IRevokedJWTRepository _revJWTRepo) : IAuthService
+                            IDistributedCache _c) : IAuthService
 {
     public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO, bool admin = false)
     {
@@ -136,12 +136,16 @@ public class AuthService(IUserService _userSvc,
     {
         User? user = await AuthenticateUserAsync(accessToken);
         await _refreshRepo.RemoveTokenAsync(refreshToken);
-        await _revJWTRepo.AddTokenAsync(new RevokedJWT() { Token = accessToken });
+        /*await _revJWTRepo.AddTokenAsync(new RevokedJWT() { Token = accessToken });*/
+        await DistributedCacheExtension.SetRecordAsync(_c, 
+                                                        $"Revoked_{accessToken}", 
+                                                        accessToken, 
+                                                        TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!)));
+
     }
 
     public async Task ClearExpiredTokensAsync()
     {
-        await _revJWTRepo.RemoveAllAsync();
         await _refreshRepo.ClearExpiredTokensAsync();
     }
 

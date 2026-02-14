@@ -17,7 +17,6 @@ public class ShopContext : DbContext
     public DbSet<OrderParrot> OrderParrots { get; set; }
     public DbSet<Parrot> Parrots { get; set; }
     public DbSet<RefreshToken> RefreshTokens { set; get; }
-    public DbSet<RevokedJWT> revokedJWTs { set; get; }
 
 
     public ShopContext(DbContextOptions options) : base(options) { }
@@ -86,11 +85,6 @@ public class ShopContext : DbContext
             .WithOne(i => i.Category)
             .HasForeignKey(i => i.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        mBuild.Entity<RevokedJWT>(rjwt =>
-        {
-            rjwt.HasKey(ent => ent.Token);
         });
 
         mBuild.Entity<RefreshToken>(
