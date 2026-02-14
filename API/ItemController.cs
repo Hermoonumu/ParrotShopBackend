@@ -18,9 +18,9 @@ public class ItemController(IItemService _itemSvc) : ControllerBase
         await _itemSvc.CreateNewItemAsync(iDTO);
         return Ok();
     }
-    [HttpPatch]
+    [HttpPatch("{Id}")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> UpdateItem([FromQuery] long Id, [FromBody] JsonPatchDocument<Item> patchDoc)
+    public async Task<IActionResult> UpdateItem([FromRoute] long Id, [FromBody] JsonPatchDocument<Item> patchDoc)
     {
         bool res = await _itemSvc.UpdateItemAsync(Id, patchDoc);
         if (res) return Ok();
