@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ParrotShopBackend.Application.DTO;
+using ParrotShopBackend.Application.Exceptions;
 using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Domain;
 namespace ParrotShopBackend.API;
@@ -60,5 +61,28 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
         return Ok(await _parrotSvc.GetAllParrotsAsync(ignoreSoftDelFilter));
     }
 
-
+    [HttpPost("BatchAdd")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> BatchAddParrots([FromBody] List<NewParrotDTO> npDTOs)
+    {
+        foreach (NewParrotDTO npDTO in npDTOs)
+        {
+            await _parrotSvc.CreateNewParrotAsync(npDTO);
+        }
+        return Ok();
+    }
+    [HttpPost("Traits/{Id}")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> AddTraitToParrot([FromRoute] long Id, [FromBody] TraitsDTO tDTO)
+    {
+        try{
+            await _parrotSvc.AddTraitToParrotAsync(Id, tDTO);
+        } catch (ParrotDoesntExistException)
+        {
+            return NotFound();
+        } 
+        return Ok();
+    
+    }
+        
 }

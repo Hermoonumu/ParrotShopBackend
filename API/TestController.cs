@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ParrotShopBackend.Domain;
 using System.Text;
 using System.Text.Json;
+using System.Reflection;
 
 namespace ParrotShopBackend.API;
 
@@ -27,10 +28,13 @@ public class TestController : ControllerBase
     public async Task<IActionResult> DumpMyParrot()
     {
         Parrot parrot = new Parrot { Name = "Chum", Price = 100 };
-        string json = JsonSerializer.Serialize(parrot);
-        Object deserialized = JsonSerializer.Deserialize<Object>(json)!;
+        List<string> propNames = (new Parrot())
+                            .GetType()
+                            .GetProperties()
+                            .Select(p => p.Name)
+                            .ToList();
 
-        return Ok(new {Message="Here's what we have: ", json, deserialized, Type=deserialized is Parrot});
+        return Ok(new {Message="Here's what we have: ", propNames});
     }
 
 

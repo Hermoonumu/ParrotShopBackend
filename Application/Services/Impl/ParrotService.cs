@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.JsonPatch;
 using ParrotShopBackend.Application.DTO;
+using ParrotShopBackend.Application.Exceptions;
 using ParrotShopBackend.Application.Mappers;
 using ParrotShopBackend.Domain;
 using ParrotShopBackend.Infrastructure.Repos;
@@ -10,6 +11,15 @@ namespace ParrotShopBackend.Application.Services;
 
 public class ParrotService(IParrotRepository _parrotRepo) : IParrotService
 {
+    public async Task AddTraitToParrotAsync(long Id, TraitsDTO tDTO)
+    {
+        Parrot? parrot = await _parrotRepo.GetParrotByIdAsync(Id, true);
+        if (parrot is null) throw new ParrotDoesntExistException("Parrot doesn't exist");
+        if (parrot.Traits is not null) throw new InvalidFormException("Parrot already has traits, consider patching.");
+        parrot.Traits = TraitsMapper.FromTraitsDTO(tDTO);
+        await _parrotRepo.UpdateParrotAsync();
+    }
+
     public async Task CreateNewParrotAsync(NewParrotDTO npDTO)
     {
         Parrot parrot = ParrotMapper.FromParrotDTO(npDTO);

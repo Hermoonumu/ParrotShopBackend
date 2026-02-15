@@ -10,14 +10,12 @@ public class ParrotTraits
     public long Id { get; set; }
     public long ParrotId{set;get;}
     public Size? Size {get; set;}
-    public byte? NoiseLevel {set; get;}
-    public byte? Sociability {set;get;}
-    public byte? Trainability {set;get;}
-    public byte? Talkativeness{set;get;}
-    public byte? ChewingRisk {set;get;}
-    public byte? CareComplexity {set;get;}
-    public byte? LifespanMin{set;get;}
-    public byte? LifespanMax{set;get;}
+    public Level? NoiseLevel {set; get;}
+    public Level? Sociability {set;get;}
+    public Level? Trainability {set;get;}
+    public Level? Talkativeness{set;get;}
+    public Level? ChewingRisk {set;get;}
+    public Level? CareComplexity {set;get;}
     public KidSafety? KidSafety {set;get;}
 
 }
@@ -34,4 +32,25 @@ public enum KidSafety
     yes,
     no,
     cautious
+}
+
+public enum Level
+{
+    Low, 
+    Mid,
+    High
+}
+
+public enum Traits
+{
+    Size,
+    NoiseLevel,
+    Sociability,
+    Trainability,
+    Talkativeness,
+    ChewingRisk,
+    CareComplexity,
+    LifespanMin,
+    LifespanMax,
+    KidSafety
 }

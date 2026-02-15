@@ -12,9 +12,19 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<Parrot?> GetParrotByIdAsync(long Id)
+    public async Task<Parrot?> GetParrotByIdAsync(long Id, bool IncludeTraits = false)
     {
-        var parrot = await _db.Parrots.FindAsync(Id);
+        Parrot? parrot;
+        if (IncludeTraits)
+        {
+            parrot = await _db.Parrots.Include(p => p.Traits)
+                                            .Where(p => p.Id == Id)
+                                            .FirstOrDefaultAsync();
+        } else
+        {
+            parrot = await _db.Parrots.FindAsync(Id);
+        }
+        parrot = await _db.Parrots.FindAsync(Id);
         if (parrot is null) return null;
         return parrot;
     }

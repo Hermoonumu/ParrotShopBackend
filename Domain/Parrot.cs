@@ -26,7 +26,12 @@ public enum Color
     Grey = 1 << 5,
     Colourful = 1 << 6,
     Pastel = 1 << 7,
-    Muted = 1 << 8
+    Muted = 1 << 8,
+    Yellow = 1 << 9,
+    Orange = 1 << 10,
+    Brown = 1 << 11,
+    Pink = 1 << 12,
+    Purple = 1 << 13
 }
 public enum Gender
 {
@@ -55,9 +60,4 @@ public enum Species
     Cockatoo = 23,
     Macaw = 24,
     Unknown = 100
-}
-
-public enum Character
-{
-    
 }

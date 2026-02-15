@@ -178,7 +178,67 @@ using (var scope = app.Services.CreateScope())
                                                                         "RevokedJWTs", 
                                                                         new List<RevokedJWT>(), 
                                                                         TimeSpan.FromDays(365));*/
-}
+    var c = scope.ServiceProvider.GetRequiredService<RedisCacheExtension>();
+    var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
+    var allParrots = await db.Parrots
+                         .IgnoreQueryFilters()
+                         .Include(p => p.Traits)
+                         .ToListAsync();
+
+    foreach(Parrot p in allParrots)
+    {
+        if (p.Traits is not null)
+        {
+            if (p.Traits.KidSafety.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.KidSafety.Value}", p.Id);
+            }
+            if (p.Traits.CareComplexity.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.CareComplexity.Value}", p.Id);
+            }
+            if (p.Traits.ChewingRisk.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.ChewingRisk.Value}", p.Id);
+            }
+            if (p.Traits.NoiseLevel.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.NoiseLevel.Value}", p.Id);
+            }
+            if (p.Traits.Size.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Size.Value}", p.Id);
+            }
+            if (p.Traits.Sociability.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Sociability.Value}", p.Id);
+            }
+            if (p.Traits.Talkativeness.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Talkativeness.Value}", p.Id);
+            }
+            if (p.Traits.Trainability.HasValue)
+            {
+                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Trainability.Value}", p.Id);
+            }
+        }
+        foreach (Color col in Enum.GetValues<Color>())
+        {
+            if (p.ColorType.HasFlag(col))
+            {
+                await c._redis.SetAddAsync($"Color_{col}", p.Id);
+            }
+        }
+        await c._redis.SetAddAsync($"Gender_{p.GenderType}", p.Id);
+        await c._redis.SetAddAsync($"Species_{p.SpeciesType}", p.Id);
+    }
+
+    /*List<string> propNames = (new Parrot())
+                            .GetType()
+                            .GetProperties()
+                            .Select(p => p.Name)
+                            .ToList();*/
+}   
 
 
 

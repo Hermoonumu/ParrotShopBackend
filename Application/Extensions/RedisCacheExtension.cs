@@ -16,14 +16,14 @@ public class RedisCacheExtension
 
     public async Task SetStringAsync(string key, string value, TimeSpan? ttl=null)
     {
-        await _redis.StringSetAsync(key, value);
-        if (ttl is not null) _redis.KeyExpire(key, ttl);
+        await _redis.StringSetAsync(key, value, (Expiration)ttl);
     }
 
     public async Task<string?> GetStringAsync(string key)
     {
         return await _redis.StringGetAsync(key);
     }
+    
     
 
 }
