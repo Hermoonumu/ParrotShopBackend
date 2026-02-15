@@ -42,6 +42,8 @@ public class AuthController(IAuthService _authSvc, IUserService _userSvc, IConfi
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
+                if (HttpContext.Request.Cookies["AccessToken"] == null
+        || HttpContext.Request.Cookies["RefreshToken"] == null) return Unauthorized(new {Message="Please log in first."});
         Dictionary<string, string> tokens = new();
         tokens = await _authSvc
                             .AttemptRefreshAsync(

@@ -22,8 +22,27 @@ public class ItemController(IItemService _itemSvc) : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> UpdateItem([FromRoute] long Id, [FromBody] JsonPatchDocument<Item> patchDoc)
     {
-        bool res = await _itemSvc.UpdateItemAsync(Id, patchDoc);
-        if (res) return Ok();
-        else return BadRequest();
+        bool hasError = await _itemSvc.UpdateItemAsync(Id, patchDoc);
+        if (hasError) return BadRequest();
+        else return Ok();
     }
+
+    [HttpDelete("{Id}")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> DeleteItem([FromRoute] long Id, [FromBody] DelConfDTO dcDTO)
+    {
+        if (dcDTO.Confirmation != "I know it's irreversible") 
+            return BadRequest(new {Message = "If you acknowledge that you wish to do that "+
+                            "pass a string into body saying \"I know it's irreversible\". Otherwise consider soft delete."});
+        await _itemSvc.RemoveItemAsync(Id);
+        return Ok();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllItems([FromQuery] bool ignoreSoftDelFilter = false)
+    {
+        return Ok(await _itemSvc.GetAllItemsAsync(ignoreSoftDelFilter));
+    }
+
+    
 }

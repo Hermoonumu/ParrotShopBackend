@@ -1,0 +1,18 @@
+using Microsoft.AspNetCore.JsonPatch;
+using ParrotShopBackend.Application.DTO;
+using ParrotShopBackend.Domain;
+
+namespace ParrotShopBackend.Application.Services;
+
+
+public interface IParrotService
+{
+    public Task CreateNewParrotAsync(NewParrotDTO npDTO);
+    public Task RemoveParrotAsync(long Id);
+    public Task<bool> UpdateParrotAsync(long Id, JsonPatchDocument<Parrot> patchDoc);
+    public Task SoftDeleteParrotAsync(long ParrotId);
+    public Task<Parrot?> RestoreParrotAsync(long ParrotId);
+    public Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false);
+
+}
+

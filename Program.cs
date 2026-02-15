@@ -14,6 +14,8 @@ using Hangfire.PostgreSql;
 using ParrotShopBackend.Application.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
 using ParrotShopBackend.Domain;
+using StackExchange.Redis;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -33,11 +35,14 @@ builder.Services.AddDbContext<ShopContext>(option => { option.UseNpgsql(builder.
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<IParrotService, ParrotService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IParrotRepository, ParrotRepository>();
+builder.Services.AddSingleton<RedisCacheExtension>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
 
@@ -55,13 +60,14 @@ builder.Services.AddHangfire(conf =>
 
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
 
-
-builder.Services.AddStackExchangeRedisCache(opt =>
+/*builder.Services.AddStackExchangeRedisCache(opt =>
 {
     opt.Configuration=builder.Configuration.GetConnectionString("Redis");
     opt.InstanceName="ParrotCache_";
-});
+});*/
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
@@ -94,14 +100,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 },
                 OnTokenValidated = async context =>
                 {
-                    var c = context.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
                     var TokenToCheck = context
                                             .HttpContext
                                             .Request
                                             .Cookies["AccessToken"];
-                    
-                    var isRevoked = await DistributedCacheExtension.
-                                    GetRecordAsync<string>(c, $"Revoked_{TokenToCheck}");
+                    var _redis = context
+                                    .HttpContext
+                                    .RequestServices
+                                    .GetRequiredService<IConnectionMultiplexer>()
+                                    .GetDatabase();
+                    var isRevoked = await _redis.StringGetAsync($"Revoked_{TokenToCheck}");
                     if (!string.IsNullOrEmpty(isRevoked)) 
                     {
                         context.Fail("Token has been revoked.");

@@ -12,6 +12,8 @@ public interface IItemService
     public Task<bool> UpdateItemAsync(long Id, JsonPatchDocument<Item> patchDoc);
     public Task SoftDeleteItemAsync(long ItemId);
     public Task<Item?> RestoreItemAsync(long ItemId);
+    public Task<List<Item>> GetAllItemsAsync(bool ignoreSoftDelFilter = false);
+
 
 }
 

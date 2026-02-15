@@ -22,7 +22,8 @@ public class AuthService(IUserService _userSvc,
                             IUserRepository _userRepo,
                             IConfiguration _conf,
                             IRefreshTokenRepository _refreshRepo,
-                            IDistributedCache _c) : IAuthService
+                            //IDistributedCache _c,
+                            RedisCacheExtension _redis) : IAuthService
 {
     public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO, bool admin = false)
     {
@@ -136,12 +137,10 @@ public class AuthService(IUserService _userSvc,
     {
         User? user = await AuthenticateUserAsync(accessToken);
         await _refreshRepo.RemoveTokenAsync(refreshToken);
-        /*await _revJWTRepo.AddTokenAsync(new RevokedJWT() { Token = accessToken });*/
-        await DistributedCacheExtension.SetRecordAsync(_c, 
-                                                        $"Revoked_{accessToken}", 
-                                                        accessToken, 
-                                                        TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!)));
-
+        var KeyName = $"Revoked_{accessToken}";
+        await _redis.SetStringAsync(KeyName, 
+                                    accessToken, 
+                                    TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!)));
     }
 
     public async Task ClearExpiredTokensAsync()

@@ -15,6 +15,11 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         await _itemRepo.AddAsync(item);
     }
 
+    public async Task<List<Item>> GetAllItemsAsync(bool ignoreSoftDelFilter = false)
+    {
+        return await _itemRepo.GetAllItemsAsync(ignoreSoftDelFilter);
+    }
+
     public async Task RemoveItemAsync(long Id)
     {
         await _itemRepo.RemoveAsync(Id);
@@ -41,7 +46,7 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
                             {
                                 hasError = true;
                             });
-        if (!hasError) {await _itemRepo.UpdateItemAsync(); return true;}
-        else return false;
+        if (!hasError) {await _itemRepo.UpdateItemAsync(); return false;}
+        else return true;
     }
 }
