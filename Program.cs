@@ -180,65 +180,81 @@ using (var scope = app.Services.CreateScope())
                                                                         TimeSpan.FromDays(365));*/
     var c = scope.ServiceProvider.GetRequiredService<RedisCacheExtension>();
     var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
-    var allParrots = await db.Parrots
+    long LastId=default;
+    while(true)
+    {
+        var redisBatch = c._redis.CreateBatch();
+        var redisTasks = new List<Task>();
+        List<Parrot> allParrots = await db.Parrots
                          .IgnoreQueryFilters()
                          .Include(p => p.Traits)
+                         .Where(p => p.Id > LastId)
+                         .Take(1000)
                          .ToListAsync();
+        if (allParrots.Count <= 0) break;
+        LastId = allParrots.Last().Id;
+        foreach(Parrot p in allParrots)
+        {
+            redisTasks.Add(redisBatch.SetAddAsync($"Set_AllParrots", p.Id));
+            if (p.Traits is not null)
+            {
+                if (p.Traits.KidSafety.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_KidSafety_{p.Traits.KidSafety.Value}", p.Id));
+                }
+                if (p.Traits.CareComplexity.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_CareComplexity_{p.Traits.CareComplexity.Value}", p.Id));
+                }
+                if (p.Traits.ChewingRisk.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_ChewingRisk_{p.Traits.ChewingRisk.Value}", p.Id));
+                }
+                if (p.Traits.NoiseLevel.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_NoiseLevel_{p.Traits.NoiseLevel.Value}", p.Id));
+                }
+                if (p.Traits.Size.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_Size_{p.Traits.Size.Value}", p.Id));
+                }
+                if (p.Traits.Sociability.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_Sociability_{p.Traits.Sociability.Value}", p.Id));
+                }
+                if (p.Traits.Talkativeness.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_Talkativeness_{p.Traits.Talkativeness.Value}", p.Id));
+                }
+                if (p.Traits.Trainability.HasValue)
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_Trainability_{p.Traits.Trainability.Value}", p.Id));
+                }
+            }
+            foreach (Color col in Enum.GetValues<Color>())
+            {
+                if (p.ColorType.HasFlag(col))
+                {
+                    redisTasks.Add(redisBatch.SetAddAsync($"Set_Color_{col}", p.Id));
+                }
+            }
+            redisTasks.Add(redisBatch.SetAddAsync($"Set_Gender_{p.GenderType}", p.Id));
+            redisTasks.Add(redisBatch.SetAddAsync($"Set_Species_{p.SpeciesType}", p.Id));
 
-    foreach(Parrot p in allParrots)
-    {
-        if (p.Traits is not null)
-        {
-            if (p.Traits.KidSafety.HasValue)
-            {
-                await c._redis.SetAddAsync($"KidSafety_{p.Traits.KidSafety.Value}", p.Id);
-            }
-            if (p.Traits.CareComplexity.HasValue)
-            {
-                await c._redis.SetAddAsync($"CareComplexity_{p.Traits.CareComplexity.Value}", p.Id);
-            }
-            if (p.Traits.ChewingRisk.HasValue)
-            {
-                await c._redis.SetAddAsync($"ChewingRisk_{p.Traits.ChewingRisk.Value}", p.Id);
-            }
-            if (p.Traits.NoiseLevel.HasValue)
-            {
-                await c._redis.SetAddAsync($"NoiseLevel_{p.Traits.NoiseLevel.Value}", p.Id);
-            }
-            if (p.Traits.Size.HasValue)
-            {
-                await c._redis.SetAddAsync($"Size_{p.Traits.Size.Value}", p.Id);
-            }
-            if (p.Traits.Sociability.HasValue)
-            {
-                await c._redis.SetAddAsync($"Sociability_{p.Traits.Sociability.Value}", p.Id);
-            }
-            if (p.Traits.Talkativeness.HasValue)
-            {
-                await c._redis.SetAddAsync($"Talkativeness_{p.Traits.Talkativeness.Value}", p.Id);
-            }
-            if (p.Traits.Trainability.HasValue)
-            {
-                await c._redis.SetAddAsync($"Trainability_{p.Traits.Trainability.Value}", p.Id);
-            }
+            redisTasks.Add(redisBatch.SortedSetAddAsync("Set_Price", p.Id, (double)p.Price!));
         }
-        foreach (Color col in Enum.GetValues<Color>())
-        {
-            if (p.ColorType.HasFlag(col))
-            {
-                await c._redis.SetAddAsync($"Color_{col}", p.Id);
-            }
+        redisBatch.Execute();
+        await Task.WhenAll(redisTasks);
         }
-        await c._redis.SetAddAsync($"Gender_{p.GenderType}", p.Id);
-        await c._redis.SetAddAsync($"Species_{p.SpeciesType}", p.Id);
     }
+
+
 
     /*List<string> propNames = (new Parrot())
                             .GetType()
                             .GetProperties()
                             .Select(p => p.Name)
-                            .ToList();*/
-}   
+                            .ToList();*/ 
 
 
 

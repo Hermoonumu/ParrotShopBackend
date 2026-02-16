@@ -79,7 +79,4 @@ public class AuthController(IAuthService _authSvc, IConfiguration _conf) : Contr
         await ComposeCookies(HttpContext, [], true);
         return Ok();
     }
-
-
-
 }

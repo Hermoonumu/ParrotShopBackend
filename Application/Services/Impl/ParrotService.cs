@@ -18,6 +18,7 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
         if (parrot is null) throw new ParrotDoesntExistException("Parrot doesn't exist");
         if (parrot.Traits is not null) throw new InvalidFormException("Parrot already has traits, consider patching.");
         parrot.Traits = TraitsMapper.FromTraitsDTO(tDTO);
+        //await _redis.UpdateCacheOnNewInfo(Id, parrot.Traits);
         await _parrotRepo.UpdateParrotAsync();
     }
 
@@ -33,7 +34,7 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
         List<Parrot?> parrots = [];
         foreach (long Id in Ids)
         {
-            parrots.Add(await _parrotRepo.GetParrotByIdAsync(Id));
+            parrots.Add(await _parrotRepo.GetParrotByIdAsync(Id, true));
         }
         return parrots;
 
