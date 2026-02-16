@@ -11,7 +11,7 @@ public class ItemMapper
     {
         return new Item()
         {
-            Name = iDTO.Name,
+            Name = iDTO.Name!,
             Description = iDTO.Description,
             Price = iDTO.Price,
             ImageUrl = iDTO.ImageUrl,

@@ -18,13 +18,12 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
         if (IncludeTraits)
         {
             parrot = await _db.Parrots.Include(p => p.Traits)
-                                            .Where(p => p.Id == Id)
-                                            .FirstOrDefaultAsync();
+                                        .Where(p => p.Id == Id)
+                                        .FirstOrDefaultAsync();
         } else
         {
             parrot = await _db.Parrots.FindAsync(Id);
         }
-        parrot = await _db.Parrots.FindAsync(Id);
         if (parrot is null) return null;
         return parrot;
     }

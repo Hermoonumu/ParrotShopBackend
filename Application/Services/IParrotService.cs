@@ -14,6 +14,9 @@ public interface IParrotService
     public Task<Parrot?> RestoreParrotAsync(long ParrotId);
     public Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false);
     public Task AddTraitToParrotAsync(long Id, TraitsDTO tDTO);
+    public Task<Parrot?>GetParrotByIdAsync(long Id, bool includeTraits=false);
+    public Task<List<Parrot>> FilterParrotsAsync(ParrotFilterDTO filterDTO);
+
 
 }
 

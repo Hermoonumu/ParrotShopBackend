@@ -29,9 +29,9 @@ public enum Size
 
 public enum KidSafety
 {
-    yes,
-    no,
-    cautious
+    Yes,
+    No,
+    Cautious
 }
 
 public enum Level

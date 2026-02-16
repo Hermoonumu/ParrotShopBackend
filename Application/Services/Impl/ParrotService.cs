@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.JsonPatch;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Exceptions;
+using ParrotShopBackend.Application.Extensions;
 using ParrotShopBackend.Application.Mappers;
 using ParrotShopBackend.Domain;
 using ParrotShopBackend.Infrastructure.Repos;
@@ -9,7 +10,7 @@ namespace ParrotShopBackend.Application.Services;
 
 
 
-public class ParrotService(IParrotRepository _parrotRepo) : IParrotService
+public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _redis) : IParrotService
 {
     public async Task AddTraitToParrotAsync(long Id, TraitsDTO tDTO)
     {
@@ -26,9 +27,26 @@ public class ParrotService(IParrotRepository _parrotRepo) : IParrotService
         await _parrotRepo.AddAsync(parrot);
     }
 
+    public async Task<List<Parrot>> FilterParrotsAsync(ParrotFilterDTO filterDTO)
+    {
+        List<long> Ids = await _redis.ApplyFilterAsync(filterDTO);
+        List<Parrot?> parrots = [];
+        foreach (long Id in Ids)
+        {
+            parrots.Add(await _parrotRepo.GetParrotByIdAsync(Id));
+        }
+        return parrots;
+
+    }
+
     public async Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false)
     {
         return await _parrotRepo.GetAllParrotsAsync(ignoreSoftDelFilter);
+    }
+
+    public Task<Parrot?> GetParrotByIdAsync(long Id, bool includeTraits = false)
+    {
+        return _parrotRepo.GetParrotByIdAsync(Id, includeTraits);
     }
 
     public async Task RemoveParrotAsync(long Id)

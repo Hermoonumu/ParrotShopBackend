@@ -28,6 +28,14 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
         return Ok(new {Msg="WOW IT WORKED!", Parrot = parrot, AllColours});
     }
 
+    [HttpGet("{Id}")]
+    public async Task<IActionResult> GetParrot([FromRoute] long Id, [FromQuery] bool includeTraits = false)
+    {
+        Parrot? parrot = await _parrotSvc.GetParrotByIdAsync(Id, includeTraits);
+        if (parrot is null) return NotFound();
+        return Ok(parrot);
+    }
+
 
     [Authorize(Policy = "Admin")]
     [HttpPost("")]
@@ -83,6 +91,12 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
         } 
         return Ok();
     
+    }
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> FilterParrots([FromQuery] ParrotFilterDTO pfDTO)
+    {
+        return Ok(await _parrotSvc.FilterParrotsAsync(pfDTO));
     }
         
 }

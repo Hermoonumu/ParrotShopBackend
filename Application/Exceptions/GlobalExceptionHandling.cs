@@ -32,7 +32,7 @@ public class GlobalExceptionHandling : IMiddleware
         ctx.Response.ContentType = "application/json";
         var response = new
         {
-            Message = ex.Message,
+            Message = ex.Message+ex.StackTrace,
         };
         return ctx.Response.WriteAsJsonAsync(response);
     }

@@ -191,35 +191,35 @@ using (var scope = app.Services.CreateScope())
         {
             if (p.Traits.KidSafety.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.KidSafety.Value}", p.Id);
+                await c._redis.SetAddAsync($"KidSafety_{p.Traits.KidSafety.Value}", p.Id);
             }
             if (p.Traits.CareComplexity.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.CareComplexity.Value}", p.Id);
+                await c._redis.SetAddAsync($"CareComplexity_{p.Traits.CareComplexity.Value}", p.Id);
             }
             if (p.Traits.ChewingRisk.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.ChewingRisk.Value}", p.Id);
+                await c._redis.SetAddAsync($"ChewingRisk_{p.Traits.ChewingRisk.Value}", p.Id);
             }
             if (p.Traits.NoiseLevel.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.NoiseLevel.Value}", p.Id);
+                await c._redis.SetAddAsync($"NoiseLevel_{p.Traits.NoiseLevel.Value}", p.Id);
             }
             if (p.Traits.Size.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Size.Value}", p.Id);
+                await c._redis.SetAddAsync($"Size_{p.Traits.Size.Value}", p.Id);
             }
             if (p.Traits.Sociability.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Sociability.Value}", p.Id);
+                await c._redis.SetAddAsync($"Sociability_{p.Traits.Sociability.Value}", p.Id);
             }
             if (p.Traits.Talkativeness.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Talkativeness.Value}", p.Id);
+                await c._redis.SetAddAsync($"Talkativeness_{p.Traits.Talkativeness.Value}", p.Id);
             }
             if (p.Traits.Trainability.HasValue)
             {
-                await c._redis.SetAddAsync($"Traits_KidSafety_{p.Traits.Trainability.Value}", p.Id);
+                await c._redis.SetAddAsync($"Trainability_{p.Traits.Trainability.Value}", p.Id);
             }
         }
         foreach (Color col in Enum.GetValues<Color>())

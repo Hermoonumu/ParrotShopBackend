@@ -11,7 +11,7 @@ namespace ParrotShopBackend.API;
 [Route("/api/auth")]
 
 
-public class AuthController(IAuthService _authSvc, IUserService _userSvc, IConfiguration _conf) : ControllerBase
+public class AuthController(IAuthService _authSvc, IConfiguration _conf) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> RegisterUser([FromBody] RegFormDTO rfDTO)
@@ -43,7 +43,7 @@ public class AuthController(IAuthService _authSvc, IUserService _userSvc, IConfi
     public async Task<IActionResult> Refresh()
     {
                 if (HttpContext.Request.Cookies["AccessToken"] == null
-        || HttpContext.Request.Cookies["RefreshToken"] == null) return Unauthorized(new {Message="Please log in first."});
+        && HttpContext.Request.Cookies["RefreshToken"] == null) return Unauthorized(new {Message="Please log in first."});
         Dictionary<string, string> tokens = new();
         tokens = await _authSvc
                             .AttemptRefreshAsync(
