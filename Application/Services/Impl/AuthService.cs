@@ -23,11 +23,14 @@ public class AuthService(IUserService _userSvc,
                             IConfiguration _conf,
                             IRefreshTokenRepository _refreshRepo,
                             //IDistributedCache _c,
-                            RedisCacheExtension _redis) : IAuthService
+                            RedisCacheExtension _redis,
+                            ICartService _cartSvc) : IAuthService
 {
     public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO, bool admin = false)
     {
         User user = UserMapper.FromRegFormDTO(rfDTO);
+        user.Cart = await _cartSvc.NewCartAsync();
+        user.CartId = user.Cart.Id;
         if (admin) user.Role = Role.Admin;
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
         user.PasswordHash = passwordHasher.HashPassword(user, rfDTO.Password!);
@@ -138,8 +141,8 @@ public class AuthService(IUserService _userSvc,
         User? user = await AuthenticateUserAsync(accessToken);
         await _refreshRepo.RemoveTokenAsync(refreshToken);
         var KeyName = $"Revoked_{accessToken}";
-        await _redis.SetStringAsync(KeyName, 
-                                    accessToken, 
+        await _redis.SetStringAsync(KeyName,
+                                    accessToken,
                                     TimeSpan.FromMinutes(Int32.Parse(_conf["SecSettings:TokenDurationMinutes"]!)));
     }
 

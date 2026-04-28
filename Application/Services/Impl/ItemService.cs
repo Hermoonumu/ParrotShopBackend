@@ -15,9 +15,14 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         await _itemRepo.AddAsync(item);
     }
 
-    public async Task<List<Item>> GetAllItemsAsync(bool ignoreSoftDelFilter = false)
+    public async Task<List<Item>> GetAllItemsAsync(int page = 0, bool ignoreSoftDelFilter = false)
     {
-        return await _itemRepo.GetAllItemsAsync(ignoreSoftDelFilter);
+        return await _itemRepo.GetAllItemsAsync(page, ignoreSoftDelFilter);
+    }
+
+    public Task<List<Item>> GetItemsByCategoryAsync(long CategoryId, int page = 0)
+    {
+        return _itemRepo.GetItemsByCategoryAsync(CategoryId, page);
     }
 
     public async Task RemoveItemAsync(long Id)
@@ -30,6 +35,10 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         return await _itemRepo.RestoreItemAsync(ItemId);
     }
 
+    public async Task<List<Item>> SearchItemsAsync(string query, int page = 0)
+    {
+        return await _itemRepo.SearchItemsAsync(query, page);
+    }
 
     public async Task SoftDeleteItemAsync(long ItemId)
     {
@@ -41,12 +50,12 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         Item? item = await _itemRepo.GetItemByIdAsync(Id);
         if (item is null) return true;
         bool hasError = false;
-        patchDoc.ApplyTo(   item,
+        patchDoc.ApplyTo(item,
                             onError =>
                             {
                                 hasError = true;
                             });
-        if (!hasError) {await _itemRepo.UpdateItemAsync(); return false;}
+        if (!hasError) { await _itemRepo.UpdateItemAsync(); return false; }
         else return true;
     }
 }

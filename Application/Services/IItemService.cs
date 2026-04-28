@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Domain;
 
@@ -12,7 +13,11 @@ public interface IItemService
     public Task<bool> UpdateItemAsync(long Id, JsonPatchDocument<Item> patchDoc);
     public Task SoftDeleteItemAsync(long ItemId);
     public Task<Item?> RestoreItemAsync(long ItemId);
-    public Task<List<Item>> GetAllItemsAsync(bool ignoreSoftDelFilter = false);
+    public Task<List<Item>> GetAllItemsAsync(int page = 0, bool ignoreSoftDelFilter = false);
+    public Task<List<Item>> SearchItemsAsync(string query, int page = 0);
+    public Task<List<Item>> GetItemsByCategoryAsync(long CategoryId, int page = 0);
+
+
 
 
 }

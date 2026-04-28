@@ -31,18 +31,32 @@ public class ItemController(IItemService _itemSvc) : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> DeleteItem([FromRoute] long Id, [FromBody] DelConfDTO dcDTO)
     {
-        if (dcDTO.Confirmation != "I know it's irreversible") 
-            return BadRequest(new {Message = "If you acknowledge that you wish to do that "+
-                            "pass a string into body saying \"I know it's irreversible\". Otherwise consider soft delete."});
+        if (dcDTO.Confirmation != "I know it's irreversible")
+            return BadRequest(new
+            {
+                Message = "If you acknowledge that you wish to do that " +
+                            "pass a string into body saying \"I know it's irreversible\". Otherwise consider soft delete."
+            });
         await _itemSvc.RemoveItemAsync(Id);
         return Ok();
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllItems([FromQuery] bool ignoreSoftDelFilter = false)
+    public async Task<IActionResult> GetAllItems([FromQuery] int page = 0, bool ignoreSoftDelFilter = false)
     {
-        return Ok(await _itemSvc.GetAllItemsAsync(ignoreSoftDelFilter));
+        return Ok(await _itemSvc.GetAllItemsAsync(page, ignoreSoftDelFilter));
     }
 
-    
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchItems([FromQuery] string query, int page = 0)
+    {
+        return Ok(await _itemSvc.SearchItemsAsync(query, page));
+    }
+
+    [HttpGet("byCategory/{Id}")]
+    public async Task<IActionResult> GetItemsByCategory([FromRoute] long Id, int page = 0)
+    {
+        return Ok(await _itemSvc.GetItemsByCategoryAsync(Id, page));
+    }
+
 }

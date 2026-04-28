@@ -20,7 +20,8 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
             parrot = await _db.Parrots.Include(p => p.Traits)
                                         .Where(p => p.Id == Id)
                                         .FirstOrDefaultAsync();
-        } else
+        }
+        else
         {
             parrot = await _db.Parrots.FindAsync(Id);
         }
@@ -60,9 +61,9 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter=false)
+    public async Task<List<Parrot>> GetAllParrotsAsync(int page = 0, bool ignoreSoftDelFilter = false)
     {
-        if (ignoreSoftDelFilter) return await _db.Parrots.IgnoreQueryFilters().ToListAsync();
-        return await _db.Parrots.ToListAsync();
+        if (ignoreSoftDelFilter) return await _db.Parrots.IgnoreQueryFilters().Include(p => p.Traits).Skip(page * 10).Take(10).ToListAsync();
+        return await _db.Parrots.Include(p => p.Traits).Skip(page * 10).Take(10).ToListAsync();
     }
 }

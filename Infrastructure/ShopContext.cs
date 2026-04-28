@@ -33,10 +33,11 @@ public class ShopContext : DbContext
             u.HasIndex(ent => ent.Email)
             .IsUnique()
             .HasDatabaseName("IX_Users_Email");
+
             u.HasOne(ent => ent.Cart)
             .WithOne(crt => crt.User)
-            .HasForeignKey<Cart>("UserId")
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey<User>(u => u.CartId)
+            .OnDelete(DeleteBehavior.SetNull);
         });
         mBuild.Entity<Item>(i =>
         {
@@ -77,7 +78,7 @@ public class ShopContext : DbContext
         {
             oi.HasKey(ent => ent.Id);
             oi.HasOne(ent => ent.LinkedItem)
-            .WithOne()
+            .WithMany()
             .OnDelete(DeleteBehavior.SetNull);
         });
         mBuild.Entity<ItemCategory>(ic =>

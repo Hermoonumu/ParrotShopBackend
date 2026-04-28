@@ -18,12 +18,15 @@ public class User
     public string PasswordHash { get; set; }
     [StringLength(100)]
     public string? Email { get; set; }
+    [StringLength(30)]
+    public string? Phone { get; set; }
+    [StringLength(200)]
+    public string? ShippingAddress { get; set; }
     [Required]
     public Role Role { get; set; }
+    public long? CartId { get; set; }
     public Cart? Cart { get; set; } //we don't need a cart for user to exist
-    public List<Order> Orders { get; set; } = new();
-
-
+    public List<Order> Orders { get; set; }
 }
 
 

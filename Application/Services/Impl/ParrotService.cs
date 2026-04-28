@@ -15,7 +15,7 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
     public async Task AddTraitToParrotAsync(long Id, TraitsDTO tDTO)
     {
         Parrot? parrot = await _parrotRepo.GetParrotByIdAsync(Id, true);
-        if (parrot is null) throw new ParrotDoesntExistException("Parrot doesn't exist");
+        if (parrot is null) throw new ItemDoesntExistException("Parrot doesn't exist");
         if (parrot.Traits is not null) throw new InvalidFormException("Parrot already has traits, consider patching.");
         parrot.Traits = TraitsMapper.FromTraitsDTO(tDTO);
         //await _redis.UpdateCacheOnNewInfo(Id, parrot.Traits);
@@ -40,9 +40,9 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
 
     }
 
-    public async Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false)
+    public async Task<List<Parrot>> GetAllParrotsAsync(int page = 0, bool ignoreSoftDelFilter = false)
     {
-        return await _parrotRepo.GetAllParrotsAsync(ignoreSoftDelFilter);
+        return await _parrotRepo.GetAllParrotsAsync(page, ignoreSoftDelFilter);
     }
 
     public Task<Parrot?> GetParrotByIdAsync(long Id, bool includeTraits = false)
@@ -70,12 +70,12 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
         Parrot? parrot = await _parrotRepo.GetParrotByIdAsync(Id);
         if (parrot is null) return true;
         bool hasError = false;
-        patchDoc.ApplyTo(   parrot,
+        patchDoc.ApplyTo(parrot,
                             onError =>
                             {
                                 hasError = true;
                             });
-        if (!hasError) {await _parrotRepo.UpdateParrotAsync(); return false;}
+        if (!hasError) { await _parrotRepo.UpdateParrotAsync(); return false; }
         else return true;
     }
 }

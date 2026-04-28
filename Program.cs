@@ -42,6 +42,14 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IParrotRepository, ParrotRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICheckoutRepository, CheckoutRepository>();
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+
 builder.Services.AddSingleton<RedisCacheExtension>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
@@ -59,9 +67,17 @@ builder.Services.AddHangfire(conf =>
         .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 });
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(
+try
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
+}
+catch (RedisConnectionException _)
+{
+    Console.WriteLine("!!!!!!!!! WARNING !!!!!!!!!\nThe service will not run without functional Redis connection. The app will be halted.");
+    return;
+}
+
 
 /*builder.Services.AddStackExchangeRedisCache(opt =>
 {
@@ -110,7 +126,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                                     .GetRequiredService<IConnectionMultiplexer>()
                                     .GetDatabase();
                     var isRevoked = await _redis.StringGetAsync($"Revoked_{TokenToCheck}");
-                    if (!string.IsNullOrEmpty(isRevoked)) 
+                    if (!string.IsNullOrEmpty(isRevoked))
                     {
                         context.Fail("Token has been revoked.");
                     }
@@ -180,8 +196,8 @@ using (var scope = app.Services.CreateScope())
                                                                         TimeSpan.FromDays(365));*/
     var c = scope.ServiceProvider.GetRequiredService<RedisCacheExtension>();
     var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
-    long LastId=default;
-    while(true)
+    long LastId = default;
+    while (true)
     {
         var redisBatch = c._redis.CreateBatch();
         var redisTasks = new List<Task>();
@@ -193,7 +209,7 @@ using (var scope = app.Services.CreateScope())
                          .ToListAsync();
         if (allParrots.Count <= 0) break;
         LastId = allParrots.Last().Id;
-        foreach(Parrot p in allParrots)
+        foreach (Parrot p in allParrots)
         {
             redisTasks.Add(redisBatch.SetAddAsync($"Set_AllParrots", p.Id));
             if (p.Traits is not null)
@@ -245,16 +261,16 @@ using (var scope = app.Services.CreateScope())
         }
         redisBatch.Execute();
         await Task.WhenAll(redisTasks);
-        }
     }
+}
 
 
 
-    /*List<string> propNames = (new Parrot())
-                            .GetType()
-                            .GetProperties()
-                            .Select(p => p.Name)
-                            .ToList();*/ 
+/*List<string> propNames = (new Parrot())
+                        .GetType()
+                        .GetProperties()
+                        .Select(p => p.Name)
+                        .ToList();*/
 
 
 

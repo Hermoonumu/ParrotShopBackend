@@ -12,9 +12,9 @@ public interface IParrotService
     public Task<bool> UpdateParrotAsync(long Id, JsonPatchDocument<Parrot> patchDoc);
     public Task SoftDeleteParrotAsync(long ParrotId);
     public Task<Parrot?> RestoreParrotAsync(long ParrotId);
-    public Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false);
+    public Task<List<Parrot>> GetAllParrotsAsync(int page = 0, bool ignoreSoftDelFilter = false);
     public Task AddTraitToParrotAsync(long Id, TraitsDTO tDTO);
-    public Task<Parrot?>GetParrotByIdAsync(long Id, bool includeTraits=false);
+    public Task<Parrot?> GetParrotByIdAsync(long Id, bool includeTraits = false);
     public Task<List<Parrot>> FilterParrotsAsync(ParrotFilterDTO filterDTO);
 
 

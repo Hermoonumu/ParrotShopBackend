@@ -1,8 +1,6 @@
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Exceptions;
 using ParrotShopBackend.Application.Services;
@@ -25,7 +23,7 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
         Parrot parrot = new Parrot { Name = "Chum", Price = 100 };
         parrot.ColorType = AllColours;
 
-        return Ok(new {Msg="WOW IT WORKED!", Parrot = parrot, AllColours});
+        return Ok(new { Msg = "WOW IT WORKED!", Parrot = parrot, AllColours });
     }
 
     [HttpGet("{Id}")]
@@ -56,17 +54,20 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> DeleteParrot([FromRoute] long Id, [FromBody] DelConfDTO dcDTO)
     {
-        if (dcDTO.Confirmation != "I know it's irreversible") 
-            return BadRequest(new {Message = "If you acknowledge that you wish to do that "+
-                            "pass a string into body saying \"I know it's irreversible\". Otherwise consider soft delete."});
+        if (dcDTO.Confirmation != "I know it's irreversible")
+            return BadRequest(new
+            {
+                Message = "If you acknowledge that you wish to do that " +
+                            "pass a string into body saying \"I know it's irreversible\". Otherwise consider soft delete."
+            });
         await _parrotSvc.RemoveParrotAsync(Id);
         return Ok();
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllParrots([FromQuery] bool ignoreSoftDelFilter = false)
+    public async Task<IActionResult> GetAllParrots([FromQuery] int page = 0, bool ignoreSoftDelFilter = false)
     {
-        return Ok(await _parrotSvc.GetAllParrotsAsync(ignoreSoftDelFilter));
+        return Ok(await _parrotSvc.GetAllParrotsAsync(page, ignoreSoftDelFilter));
     }
 
     [HttpPost("BatchAdd")]
@@ -83,14 +84,16 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> AddTraitToParrot([FromRoute] long Id, [FromBody] TraitsDTO tDTO)
     {
-        try{
+        try
+        {
             await _parrotSvc.AddTraitToParrotAsync(Id, tDTO);
-        } catch (ParrotDoesntExistException)
+        }
+        catch (ItemDoesntExistException)
         {
             return NotFound();
-        } 
+        }
         return Ok();
-    
+
     }
 
     [HttpGet("filter")]
@@ -98,5 +101,5 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
     {
         return Ok(await _parrotSvc.FilterParrotsAsync(pfDTO));
     }
-        
+
 }

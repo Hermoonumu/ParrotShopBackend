@@ -14,7 +14,9 @@ public static class UserMapper
             Name = dto.Name ?? string.Empty,
             Username = dto.Username ?? string.Empty,
             Email = dto.Email,
-            Role = Role.User
+            Role = Role.User,
+            Phone = dto.Phone,
+            ShippingAddress = dto.ShippingAddress
         };
 
         return user;

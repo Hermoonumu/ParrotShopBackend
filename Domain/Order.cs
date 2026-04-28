@@ -16,6 +16,8 @@ public class Order
     public DateTime Timestamp { set; get; }
     [Required]
     public string ShippingAddress { get; set; } = string.Empty;
+    [Required]
+    public decimal Total { get; set; }
 
     public List<OrderItem> OrderItems { get; set; } = new();
 

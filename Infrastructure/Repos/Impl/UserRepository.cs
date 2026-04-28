@@ -14,9 +14,26 @@ public class UserRepository(ShopContext _db) : IUserRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<User?> GetUserByIdAsync(long id)
+    public async Task<User?> GetUserByIdAsync(long id, bool includeCart = false)
     {
-        return await _db.Users.Include(u => u.Cart).Where(u => u.Id == id).FirstOrDefaultAsync();
+        if (includeCart)
+        {
+            return await _db.Users
+    .Include(u => u.Cart)
+        .ThenInclude(c => c.CartItems)
+            .ThenInclude(ci => ci.Item)
+    .Include(u => u.Orders)
+        .ThenInclude(o => o.OrderItems)
+        .IgnoreQueryFilters()
+    .Where(u => u.Id == id)
+    .AsSplitQuery()
+    .FirstOrDefaultAsync();
+        }
+        else
+        {
+            return await _db.Users.Where(u => u.Id == id).Include(u => u.Orders).ThenInclude(o => o.OrderItems).FirstOrDefaultAsync();
+        }
+
     }
 
     public async Task<User?> GetUserByUsernameAsync(string username)
@@ -32,6 +49,13 @@ public class UserRepository(ShopContext _db) : IUserRepository
     public async Task<User?> CheckIfExists(string username)
     {
         return await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+    }
+
+    public async Task ClearCart(User user)
+    {
+        await _db.CartItems
+        .Where(ci => ci.CartId == user.CartId)
+        .ExecuteDeleteAsync();
     }
 
 }

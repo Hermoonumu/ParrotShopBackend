@@ -20,6 +20,7 @@ public class OrderItem
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal PriceAtOrderTime { get; set; }
+    public int Qty { get; set; }
     public string? ImageUrl { get; set; }
     public long? OrderId { get; set; }
 }

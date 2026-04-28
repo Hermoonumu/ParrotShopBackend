@@ -11,4 +11,8 @@ public interface ICategoryRepository
     public Task RemoveAsync(long Id);
     public Task SetCategoryNameAsync(long CategoryId, string Name);
     public Task SetCategoryDescriptionAsync(long CategoryId, string Description);
+    public Task AddItemToCategory(long ItemId, long CategoryId);
+    public Task RemoveItemFromCategory(long ItemId, long CategoryId);
+    public Task<List<ItemCategory>> GetAllCategoriesAsync();
+
 }

@@ -9,5 +9,5 @@ public class CartDTO
     public long? Id { get; set; }
     public long? UserId { get; set; }
 
-    public List<CartItemDTO> CartItems { get; set; } = new();
+    public List<CartItem> CartItems { get; set; } = new();
 }

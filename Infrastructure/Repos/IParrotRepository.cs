@@ -10,6 +10,6 @@ public interface IParrotRepository
     public Task<Parrot?> RestoreParrotAsync(long ParrotId);
     public Task SoftDeleteParrotAsync(long ParrotId);
     public Task UpdateParrotAsync();
-    public Task<List<Parrot>> GetAllParrotsAsync(bool ignoreSoftDelFilter = false); 
+    public Task<List<Parrot>> GetAllParrotsAsync(int page = 0, bool ignoreSoftDelFilter = false);
 
 }
