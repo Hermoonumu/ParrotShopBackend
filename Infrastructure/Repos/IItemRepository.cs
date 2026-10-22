@@ -17,6 +17,7 @@ public interface IItemRepository
     public Task<List<Item>> GetAllItemsAsync(int page = 0, bool ignoreSoftDelFilter = false);
     public Task<List<Item>> SearchItemsAsync(string query, int page = 0);
     public Task<List<Item>> GetItemsByCategoryAsync(long CategoryId, int page = 0);
+    public Task<List<string>> GetSearchSuggestionsAsync(string query);
 
 
 }

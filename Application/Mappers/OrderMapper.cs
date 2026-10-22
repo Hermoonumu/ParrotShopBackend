@@ -11,7 +11,7 @@ public static class OrderMapper
     {
         return new OrderItem()
         {
-            LinkedItemId = item.Id,
+            LinkedItemId = item.Item.Id,
             Name = item.Item.Name,
             Description = item.Item.Description,
             PriceAtOrderTime = item.Item.Price,
@@ -26,7 +26,8 @@ public static class OrderMapper
         OrderDTO dto = new OrderDTO()
         {
             Id = order.Id,
-            UserId = order.UserId,
+            UserId = long.Parse(order.UserId.ToString()),
+            Status = order.Status,
             Timestamp = order.Timestamp,
             ShippingAddress = order.ShippingAddress,
             Total = order.Total,

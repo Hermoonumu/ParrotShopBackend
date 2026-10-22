@@ -38,6 +38,15 @@ public class ItemRepository(ShopContext _db) : IItemRepository
 
     }
 
+    public async Task<List<string>> GetSearchSuggestionsAsync(string query)
+    {
+        return await _db.Items
+                        .Where(i => i.Name.ToLower().StartsWith(query.ToLower()))
+                        .Select(i => i.Name)
+                        .Take(10)
+                        .ToListAsync();
+    }
+
     public async Task RemoveAsync(long Id)
     {
         var item = await _db.Items.IgnoreQueryFilters()
@@ -59,7 +68,13 @@ public class ItemRepository(ShopContext _db) : IItemRepository
 
     public async Task<List<Item>> SearchItemsAsync(string query, int page = 0)
     {
-        List<Item> items = await _db.Items.Where(i => i.Name.ToLower().Contains(query.ToLower())).Skip(page * 10).Take(10).ToListAsync();
+        List<Item> items = await _db.Items
+                                    .Include(i => (i as Parrot).Traits)
+                                    .Where(i => i.Name.ToLower()
+                                    .Contains(query.ToLower()))
+                                    .Skip(page * 10)
+                                    .Take(10)
+                                    .ToListAsync();
 
         return items;
     }

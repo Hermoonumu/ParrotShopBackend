@@ -1,32 +1,48 @@
-using Scalar.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using ParrotShopBackend.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using ParrotShopBackend.Application.Services;
-using ParrotShopBackend.Infrastructure.Repos;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using ParrotShopBackend.Application.Exceptions;
 using Hangfire;
 using Hangfire.PostgreSql;
-using ParrotShopBackend.Application.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
+using ParrotShopBackend.Application.Exceptions;
+using ParrotShopBackend.Application.Extensions;
+using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Domain;
+using ParrotShopBackend.Infrastructure;
+using ParrotShopBackend.Infrastructure.Repos;
+using Scalar.AspNetCore;
 using StackExchange.Redis;
+using Stripe;
+
+
+// stripe listen --forward-to http://localhost:5084/api/payments/webhook
+
+
+//Console.Write("Enter the webhook signing key: ");
+//var StripeWebhookSecret = Console.ReadLine();
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+
+
+//Allow angular
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
     {
-        // This makes your Enum show up as strings in the JSON response
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        policy.WithOrigins(["https://hermoonumu.github.io"]) // Your Angular URL
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Crucial if you are using cookies/tokens
     });
+});
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddFluentValidationAutoValidation();
@@ -48,17 +64,23 @@ builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICheckoutRepository, CheckoutRepository>();
-builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<ICheckoutService, ParrotShopBackend.Application.Services.CheckoutService>();
 
 builder.Services.AddSingleton<RedisCacheExtension>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 
 
 builder.Services.AddControllers()
-                .AddNewtonsoftJson(opt =>
-                {
-                    opt.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                });
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    })
+    .AddNewtonsoftJson(opt =>
+    {
+        opt.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+        opt.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+    });
 
 builder.Services.AddHangfire(conf =>
 {
@@ -70,11 +92,11 @@ builder.Services.AddHangfire(conf =>
 try
 {
     builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
+    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")! + ",allowAdmin=true"));
 }
-catch (RedisConnectionException _)
+catch (RedisConnectionException e)
 {
-    Console.WriteLine("!!!!!!!!! WARNING !!!!!!!!!\nThe service will not run without functional Redis connection. The app will be halted.");
+    Console.WriteLine("!!!!!!!!! WARNING !!!!!!!!!\nThe service will not run without functional Redis connection. The app will be halted.\n" + e.Message);
     return;
 }
 
@@ -141,8 +163,11 @@ builder.Services.AddAuthorization(options =>
     );
 
 builder.Services.AddHangfireServer();
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var app = builder.Build();
+
+app.UseStaticFiles();
 
 app.UseMiddleware<GlobalExceptionHandling>();
 
@@ -155,7 +180,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseCors();
+app.UseCors("AllowAngular"); //Letting the angular go through
 
 app.UseAuthentication();
 app.UseAuthorization();

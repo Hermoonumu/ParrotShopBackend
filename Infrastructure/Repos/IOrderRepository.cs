@@ -7,5 +7,9 @@ public interface IOrderRepository
     public Task AddOrderItemAsync(OrderItem oItem);
     public Task SaveOrderAsync(Order order);
     public Task SaveChangedOrderAsync();
-    public Task GetAllUserOrders(User user);
+    public Task<List<Order>> GetAllUserOrders(User user);
+    public Task<Order> GetOrderByIdAsync(long Id);
+    public Task<List<Order>> GetAllOrdersAsync();
+    public Task<List<Order>> GetPendingOrdersAsync();
 }
+

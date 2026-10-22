@@ -8,10 +8,9 @@ public class Order
 {
     [Key]
     public long Id { get; set; }
-    [Required]
-    public long UserId { get; set; }
-    [Required]
-    public User User { get; set; }
+    public long? UserId { get; set; }
+    public string? Status { get; set; } = "Processing";
+    public User? User { get; set; }
     [Required]
     public DateTime Timestamp { set; get; }
     [Required]

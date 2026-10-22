@@ -11,9 +11,14 @@ public class OrderRepository(ShopContext _db) : IOrderRepository
         await _db.OrderItems.AddAsync(oItem);
     }
 
-    public Task GetAllUserOrders(User user)
+    public async Task<List<Order>> GetAllUserOrders(User user)
     {
-        throw new NotImplementedException();
+        return await _db.Orders.Include(o => o.OrderItems).Where(o => o.UserId == user.Id).ToListAsync();
+    }
+
+    public Task<Order> GetOrderByIdAsync(long Id)
+    {
+        return _db.Orders.Include(o => o.OrderItems).Where(o => o.Id == Id).FirstOrDefaultAsync();
     }
 
     public async Task SaveChangedOrderAsync()
@@ -24,5 +29,13 @@ public class OrderRepository(ShopContext _db) : IOrderRepository
     public async Task SaveOrderAsync(Order order)
     {
         await _db.Orders.AddAsync(order);
+    }
+    public async Task<List<Order>> GetAllOrdersAsync()
+    {
+        return await _db.Orders.Include(o => o.OrderItems).ToListAsync();
+    }
+    public async Task<List<Order>> GetPendingOrdersAsync()
+    {
+        return await _db.Orders.Include(o => o.OrderItems).Where(o => o.Status.ToLower() == "processing").ToListAsync();
     }
 }

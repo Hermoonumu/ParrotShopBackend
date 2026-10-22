@@ -16,16 +16,18 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
     {
         Parrot? parrot = await _parrotRepo.GetParrotByIdAsync(Id, true);
         if (parrot is null) throw new ItemDoesntExistException("Parrot doesn't exist");
-        if (parrot.Traits is not null) throw new InvalidFormException("Parrot already has traits, consider patching.");
+        await _redis.RemoveParrotFromCacheAsync(parrot);
+        await _parrotRepo.RemoveTraitAsync(parrot);
         parrot.Traits = TraitsMapper.FromTraitsDTO(tDTO);
-        //await _redis.UpdateCacheOnNewInfo(Id, parrot.Traits);
         await _parrotRepo.UpdateParrotAsync();
+        await _redis.AddParrotToCacheAsync(parrot);
     }
 
     public async Task CreateNewParrotAsync(NewParrotDTO npDTO)
     {
         Parrot parrot = ParrotMapper.FromParrotDTO(npDTO);
         await _parrotRepo.AddAsync(parrot);
+        await _redis.AddParrotToCacheAsync(parrot);
     }
 
     public async Task<List<Parrot>> FilterParrotsAsync(ParrotFilterDTO filterDTO)
@@ -45,37 +47,52 @@ public class ParrotService(IParrotRepository _parrotRepo, RedisCacheExtension _r
         return await _parrotRepo.GetAllParrotsAsync(page, ignoreSoftDelFilter);
     }
 
-    public Task<Parrot?> GetParrotByIdAsync(long Id, bool includeTraits = false)
+    public Task<Parrot?> GetParrotByIdAsync(long Id, bool includeTraits = false, bool woTracking = false)
     {
-        return _parrotRepo.GetParrotByIdAsync(Id, includeTraits);
+        return _parrotRepo.GetParrotByIdAsync(Id, includeTraits, woTracking);
     }
 
     public async Task RemoveParrotAsync(long Id)
     {
+        await _redis.RemoveParrotFromCacheAsync(await _parrotRepo.GetParrotByIdAsync(Id, true));
         await _parrotRepo.RemoveAsync(Id);
     }
 
     public async Task<Parrot?> RestoreParrotAsync(long ParrotId)
     {
+        await _redis.AddParrotToCacheAsync(await _parrotRepo.GetParrotByIdAsync(ParrotId, true));
         return await _parrotRepo.RestoreParrotAsync(ParrotId);
     }
 
     public async Task SoftDeleteParrotAsync(long ParrotId)
     {
+        await _redis.RemoveParrotFromCacheAsync(await _parrotRepo.GetParrotByIdAsync(ParrotId, true));
         await _parrotRepo.SoftDeleteParrotAsync(ParrotId);
     }
 
-    public async Task<bool> UpdateParrotAsync(long Id, JsonPatchDocument<Parrot> patchDoc)
+    public async Task<string> UpdateParrotAsync(long Id, JsonPatchDocument<Parrot> patchDoc)
     {
-        Parrot? parrot = await _parrotRepo.GetParrotByIdAsync(Id);
-        if (parrot is null) return true;
-        bool hasError = false;
-        patchDoc.ApplyTo(parrot,
-                            onError =>
-                            {
-                                hasError = true;
-                            });
-        if (!hasError) { await _parrotRepo.UpdateParrotAsync(); return false; }
-        else return true;
+        Parrot? oldParrot = await _parrotRepo.GetParrotByIdAsync(Id, true, true);
+        Parrot? parrotToUpdate = await _parrotRepo.GetParrotByIdAsync(Id, true, true);
+        if (oldParrot is null) return "Parrot doesn't exist";
+        string hasError = null;
+        patchDoc.ApplyTo(parrotToUpdate, onError => { hasError = onError.ToString(); });
+
+        if (hasError is null)
+        {
+            await _parrotRepo.UpdateParrotAsync();
+            if (parrotToUpdate.IsDeleted)
+            {
+                await _redis.RemoveParrotFromCacheAsync(parrotToUpdate);
+            }
+            else
+            {
+                await _redis.RemoveParrotFromCacheAsync(parrotToUpdate);
+                await _redis.AddParrotToCacheAsync(parrotToUpdate);
+            }
+            return null;
+        }
+
+        return hasError;
     }
 }

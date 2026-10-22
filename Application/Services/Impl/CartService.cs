@@ -9,14 +9,14 @@ namespace ParrotShopBackend.Application.Services;
 
 
 
-public class CartService(ICartRepository _carRepo, ICartItemRepository _icartRepo) : ICartService
+public class CartService(ICartRepository _carRepo, ICartItemRepository _icartRepo, IItemRepository _itemRepo) : ICartService
 {
     public async Task<CartDTO> GetCartItemsAsync(User user)
     {
         return CartMapper.FromCart(user.Cart!);
     }
 
-    public async Task PutItemToCartAsync(long itemId, int qty, User user)
+    public async Task<CartItem> PutItemToCartAsync(long itemId, int qty, User user)
     {
         CartItem ct = new CartItem()
         {
@@ -27,12 +27,14 @@ public class CartService(ICartRepository _carRepo, ICartItemRepository _icartRep
         user.Cart.CartItems.Add(ct);
         await _icartRepo.AddAsync(ct);
         await _carRepo.SaveCartChangeAsync();
-        return;
+
+        ct.Item = await _itemRepo.GetItemByIdAsync(itemId);
+        return ct;
     }
 
     public async Task RemoveItemFromCartAsync(long itemId, User user)
     {
-        List<CartItem> items = user!.Cart!.CartItems.FindAll(i => i.CartId == itemId);
+        List<CartItem> items = user!.Cart!.CartItems.FindAll(i => i.ItemId == itemId);
         if (items.Count <= 0)
         {
             throw new ItemDoesntExistException("No such item in cart");
@@ -54,8 +56,8 @@ public class CartService(ICartRepository _carRepo, ICartItemRepository _icartRep
 
     public async Task ChangeQtyAsync(long itemId, int newQty, User user)
     {
-        if (user.CartId == null) throw new ItemDoesntExistException("User has no cart");
-        Cart? cart = await _carRepo.GetCartAsync(user.CartId.Value);
+        if (user.Cart == null) throw new ItemDoesntExistException("User has no cart");
+        Cart? cart = await _carRepo.GetCartAsync(user.Cart.Id);
         if (cart == null) return;
         var item = cart.CartItems.FirstOrDefault(i => i.ItemId == itemId);
         if (item == null) throw new ItemDoesntExistException("Item doesn't exist in cart");

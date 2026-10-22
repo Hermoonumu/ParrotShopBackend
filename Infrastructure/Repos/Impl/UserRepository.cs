@@ -41,9 +41,9 @@ public class UserRepository(ShopContext _db) : IUserRepository
         return await _db.Users.Include(u => u.Cart).Where(u => u.Username == username).FirstOrDefaultAsync();
     }
 
-    public async Task RemoveUserByUsernameAsync(string username)
+    public async Task RemoveUserAsync(User user)
     {
-        await _db.Users.Where(u => u.Username == username).ExecuteDeleteAsync();
+        await _db.Users.Where(u => u.Id == user.Id).ExecuteDeleteAsync();
         await _db.SaveChangesAsync();
     }
     public async Task<User?> CheckIfExists(string username)
@@ -53,9 +53,16 @@ public class UserRepository(ShopContext _db) : IUserRepository
 
     public async Task ClearCart(User user)
     {
+        Cart? cart = await _db.Carts.Where(c => c.UserId == user.Id).FirstOrDefaultAsync();
+
         await _db.CartItems
-        .Where(ci => ci.CartId == user.CartId)
+        .Where(ci => ci.CartId == cart.Id)
         .ExecuteDeleteAsync();
+    }
+
+    public async Task UpdateUserAsync()
+    {
+        await _db.SaveChangesAsync();
     }
 
 }

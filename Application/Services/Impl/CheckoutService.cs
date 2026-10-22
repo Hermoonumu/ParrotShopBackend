@@ -19,6 +19,7 @@ public class CheckoutService(ICheckoutRepository _chkRepo, IOrderRepository _ord
         Order ord = new Order()
         {
             UserId = user.Id,
+            User = user,
             Timestamp = DateTime.UtcNow,
             ShippingAddress = user.ShippingAddress,
             OrderItems = user.Cart.CartItems.Select(c => OrderMapper.CartItemToOrderItem(c)).ToList(),

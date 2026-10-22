@@ -29,8 +29,6 @@ public class AuthService(IUserService _userSvc,
     public async Task<Dictionary<string, string>> RegisterAsync(RegFormDTO rfDTO, bool admin = false)
     {
         User user = UserMapper.FromRegFormDTO(rfDTO);
-        user.Cart = await _cartSvc.NewCartAsync();
-        user.CartId = user.Cart.Id;
         if (admin) user.Role = Role.Admin;
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
         user.PasswordHash = passwordHasher.HashPassword(user, rfDTO.Password!);
@@ -56,6 +54,8 @@ public class AuthService(IUserService _userSvc,
                 }
             }
         }
+        user.Cart = await _cartSvc.NewCartAsync();
+        user.Cart.UserId = user.Id;
         return await GenerateTokensAsync(user);
 
     }

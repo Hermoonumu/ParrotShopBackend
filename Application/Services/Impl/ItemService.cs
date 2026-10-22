@@ -40,6 +40,11 @@ public class ItemService(IItemRepository _itemRepo) : IItemService
         return await _itemRepo.SearchItemsAsync(query, page);
     }
 
+    public async Task<List<string>> SearchSuggestionsAsync(string query)
+    {
+        return await _itemRepo.GetSearchSuggestionsAsync(query);
+    }
+
     public async Task SoftDeleteItemAsync(long ItemId)
     {
         await _itemRepo.SoftDeleteItemAsync(ItemId);

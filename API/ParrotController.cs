@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using ParrotShopBackend.Application.DTO;
 using ParrotShopBackend.Application.Exceptions;
+using ParrotShopBackend.Application.Extensions;
 using ParrotShopBackend.Application.Services;
 using ParrotShopBackend.Domain;
 namespace ParrotShopBackend.API;
@@ -13,7 +14,7 @@ namespace ParrotShopBackend.API;
 [ApiController]
 [Route("/api/parrots")]
 
-public class ParrotController(IParrotService _parrotSvc) : ControllerBase
+public class ParrotController(IParrotService _parrotSvc, RedisCacheExtension _redisCache) : ControllerBase
 {
     [HttpPost("testColourHandling")]
     public async Task<IActionResult> TestColourHandling([FromBody] List<Color> colours)
@@ -44,11 +45,13 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
     }
     [HttpPatch("{Id}")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> UpdateItem([FromRoute] long Id, [FromBody] JsonPatchDocument<Parrot> patchDoc)
+    public async Task<IActionResult> UpdateParrot([FromRoute] long Id, [FromBody] JsonPatchDocument<Parrot> patchDoc)
     {
-        bool hasError = await _parrotSvc.UpdateParrotAsync(Id, patchDoc);
-        if (hasError) return BadRequest();
-        else return Ok();
+        Parrot? untrackedParrot = await _parrotSvc.GetParrotByIdAsync(Id, true, true);
+        string hasError = await _parrotSvc.UpdateParrotAsync(Id, patchDoc);
+        if (hasError is not null) return BadRequest(new { message = hasError });
+        Parrot parrot = (await _parrotSvc.GetParrotByIdAsync(Id)!);
+        return Ok(parrot);
     }
     [HttpDelete("{Id}")]
     [Authorize(Policy = "Admin")]
@@ -99,7 +102,40 @@ public class ParrotController(IParrotService _parrotSvc) : ControllerBase
     [HttpGet("filter")]
     public async Task<IActionResult> FilterParrots([FromQuery] ParrotFilterDTO pfDTO)
     {
-        return Ok(await _parrotSvc.FilterParrotsAsync(pfDTO));
+        List<Parrot> parrots = await _parrotSvc.FilterParrotsAsync(pfDTO);
+        if (pfDTO.AscendingPrice.HasValue)
+        {
+            if (pfDTO.AscendingPrice.Value)
+            {
+                return Ok(parrots.OrderByDescending(p => p.Price).ToList());
+            }
+            else
+            {
+                return Ok(parrots.OrderBy(p => p.Price).ToList());
+            }
+        }
+        return Ok(parrots);
+    }
+
+    [HttpGet("parrotRecommendation")]
+    public async Task<IActionResult> ParrotRecommendation([FromQuery] ParrotFilterDTO pfDTO)
+    {
+        List<long> recIds = await _redisCache.GetRecommendationsAsync(pfDTO);
+        if (recIds.Count == 0)
+            return Ok(new List<Parrot>());
+
+        List<Parrot> parrots = [];
+        foreach (long i in recIds)
+        {
+            parrots.Add(await _parrotSvc.GetParrotByIdAsync(i, true));
+        }
+
+        if (pfDTO.AscendingPrice == true)
+            parrots = parrots.OrderBy(p => p.Price).ToList();
+        else if (pfDTO.AscendingPrice == false)
+            parrots = parrots.OrderByDescending(p => p.Price).ToList();
+
+        return Ok(parrots);
     }
 
 }

@@ -24,7 +24,6 @@ public class User
     public string? ShippingAddress { get; set; }
     [Required]
     public Role Role { get; set; }
-    public long? CartId { get; set; }
     public Cart? Cart { get; set; } //we don't need a cart for user to exist
     public List<Order> Orders { get; set; }
 }

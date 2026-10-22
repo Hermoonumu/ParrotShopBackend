@@ -24,26 +24,43 @@ public class AuthController(IAuthService _authSvc, IConfiguration _conf) : Contr
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginFormDTO lfDTO)
     {
-        Dictionary<string, string> tokens = await _authSvc.LoginAsync(lfDTO);
+        Dictionary<string, string> tokens;
+        try
+        {
+            tokens = await _authSvc.LoginAsync(lfDTO);
+        }
+        catch (Exception e)
+        {
+            return Unauthorized(new { Message = e.Message });
+        }
         await ComposeCookies(HttpContext, tokens);
         return Ok();
     }
 
     [Authorize]
-    [HttpGet("test")]
-    public async Task<IActionResult> Test()
+    [HttpGet("whoami")]
+    public async Task<IActionResult> WhoAmI()
     {
 
         User? user = await _authSvc.AuthenticateUserAsync(HttpContext.Request.Cookies["AccessToken"]!);
 
-        return Ok(new { Message = $"You are {user!.Name}! Username: {user!.Username}; Access level: {user!.Role}" });
+        return Ok(new
+        {
+            username = user!.Username,
+            role = user!.Role,
+            id = user!.Id,
+            email = user!.Email,
+            name = user!.Name,
+            phone = user!.Phone,
+            shippingaddress = user!.ShippingAddress
+        });
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
-                if (HttpContext.Request.Cookies["AccessToken"] == null
-        && HttpContext.Request.Cookies["RefreshToken"] == null) return Unauthorized(new {Message="Please log in first."});
+        if (HttpContext.Request.Cookies["AccessToken"] == null
+&& HttpContext.Request.Cookies["RefreshToken"] == null) return Unauthorized(new { Message = "Please log in first." });
         Dictionary<string, string> tokens = new();
         tokens = await _authSvc
                             .AttemptRefreshAsync(

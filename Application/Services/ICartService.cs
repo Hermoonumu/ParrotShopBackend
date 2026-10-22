@@ -6,7 +6,7 @@ namespace ParrotShopBackend.Application.Services;
 
 public interface ICartService
 {
-    public Task PutItemToCartAsync(long itemId, int qty, User user);
+    public Task<CartItem> PutItemToCartAsync(long itemId, int qty, User user);
     public Task RemoveItemFromCartAsync(long itemId, User user);
     public Task<CartDTO> GetCartItemsAsync(User user);
 

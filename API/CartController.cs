@@ -25,8 +25,7 @@ public class CartController(ICartService _cartSvc, IUserService _userSvc) : Cont
     public async Task<IActionResult> PutToCart([FromQuery] long ItemId, int qty)
     {
         User? usr = await _userSvc.GetUserByToken(User, true);
-        await _cartSvc.PutItemToCartAsync(ItemId, qty, usr!);
-        return Ok();
+        return Ok(await _cartSvc.PutItemToCartAsync(ItemId, qty, usr!));
     }
 
     [HttpDelete()]

@@ -53,6 +53,13 @@ public class ItemController(IItemService _itemSvc) : ControllerBase
         return Ok(await _itemSvc.SearchItemsAsync(query, page));
     }
 
+    [HttpGet("searchSuggestions")]
+    public async Task<IActionResult> SearchSuggestions([FromQuery] string query)
+    {
+        return Ok(await _itemSvc.SearchSuggestionsAsync(query));
+    }
+
+
     [HttpGet("byCategory/{Id}")]
     public async Task<IActionResult> GetItemsByCategory([FromRoute] long Id, int page = 0)
     {

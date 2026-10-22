@@ -12,21 +12,22 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task<Parrot?> GetParrotByIdAsync(long Id, bool IncludeTraits = false)
+    public async Task<Parrot?> GetParrotByIdAsync(long id, bool includeTraits = false, bool ignoreSoftDelFilter = false, bool woTracking = false)
     {
-        Parrot? parrot;
-        if (IncludeTraits)
+        IQueryable<Parrot> query = _db.Parrots;
+        if (woTracking)
         {
-            parrot = await _db.Parrots.Include(p => p.Traits)
-                                        .Where(p => p.Id == Id)
-                                        .FirstOrDefaultAsync();
+            query = query.AsNoTracking();
         }
-        else
+        if (ignoreSoftDelFilter)
         {
-            parrot = await _db.Parrots.FindAsync(Id);
+            query = query.IgnoreQueryFilters();
         }
-        if (parrot is null) return null;
-        return parrot;
+        if (includeTraits)
+        {
+            query = query.Include(p => p.Traits);
+        }
+        return await query.FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task RemoveAsync(long Id)
@@ -65,5 +66,11 @@ public class ParrotRepository(ShopContext _db) : IParrotRepository
     {
         if (ignoreSoftDelFilter) return await _db.Parrots.IgnoreQueryFilters().Include(p => p.Traits).Skip(page * 10).Take(10).ToListAsync();
         return await _db.Parrots.Include(p => p.Traits).Skip(page * 10).Take(10).ToListAsync();
+    }
+
+    public async Task RemoveTraitAsync(Parrot parrot)
+    {
+        parrot.Traits = null;
+        await _db.Traits.Where(t => t.Id == parrot.TraitsId).ExecuteDeleteAsync();
     }
 }

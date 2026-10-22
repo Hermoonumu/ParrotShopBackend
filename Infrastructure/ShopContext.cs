@@ -28,16 +28,16 @@ public class ShopContext : DbContext
         mBuild.Entity<User>(u =>
         {
             u.HasKey(ent => ent.Id);
-            u.HasAlternateKey(ent => ent.Username)
-            .HasName("AK_Users_Username");
+            u.HasIndex(u => u.Username)
+            .IsUnique();
             u.HasIndex(ent => ent.Email)
             .IsUnique()
             .HasDatabaseName("IX_Users_Email");
 
             u.HasOne(ent => ent.Cart)
             .WithOne(crt => crt.User)
-            .HasForeignKey<User>(u => u.CartId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasForeignKey<Cart>(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
         });
         mBuild.Entity<Item>(i =>
         {
@@ -50,6 +50,13 @@ public class ShopContext : DbContext
         });
         mBuild.Entity<Cart>(c =>
         {
+            c.HasOne(ent => ent.User)
+            .WithOne(u => u.Cart)
+            .HasForeignKey<Cart>(crt => crt.UserId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
             c.HasKey(ent => ent.Id);
             c.HasMany(ent => ent.CartItems)
             .WithOne()
@@ -69,7 +76,9 @@ public class ShopContext : DbContext
             o.HasKey(ent => ent.Id);
             o.HasOne(ent => ent.User)
             .WithMany(u => u.Orders)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
             o.HasMany(ent => ent.OrderItems)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
