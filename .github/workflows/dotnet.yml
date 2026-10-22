@@ -1,0 +1,68 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  REMOTE_HOST: "ec2-13-49-31-189.eu-north-1.compute.amazonaws.com"
+  REMOTE_USER: "ec2-user"
+  TARGET: "/home/ec2-user/publish"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Publish
+        run: dotnet publish -c Release -o ./publish
+
+      # --- Deployment steps (only run on push to main, not on PRs) ---
+
+      - name: Configure SSH Agent
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_AWS_KEY }}
+
+      - name: Stop backend service
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "sudo systemctl stop parrotservice"
+
+      - name: Deploy files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # Ensure target directory exists and copy contents directly
+          ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "mkdir -p $TARGET"
+          scp -r ./publish/* $REMOTE_USER@$REMOTE_HOST:$TARGET/
+
+      - name: Restore configuration and start backend
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "
+            cp -f ~/appsettings.json $TARGET/appsettings.json &&
+            sudo systemctl start parrotservice
+          "
