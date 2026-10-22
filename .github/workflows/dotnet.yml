@@ -50,7 +50,7 @@ jobs:
       - name: Stop backend service
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "sudo systemctl stop parrotservice"
+          ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "sudo systemctl stop parrotshop"
 
       - name: Deploy files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -64,5 +64,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST "
             cp -f ~/appsettings.json $TARGET/appsettings.json &&
-            sudo systemctl start parrotservice
+            sudo systemctl start parrotshop
           "
